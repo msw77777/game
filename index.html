@@ -25,8 +25,11 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-be
 h1{font:400 clamp(26px,4.2vw,40px)/1.1 var(--f-display);margin:0;letter-spacing:.06em;text-wrap:balance}
 .hud{display:flex;flex-wrap:wrap;gap:4px 18px;font-variant-numeric:tabular-nums;color:var(--dim)}
 .hud b{color:var(--line);font-weight:700}.hud .g{color:var(--gold)}
-.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:26px 20px;align-items:start}
-.col{display:grid;gap:26px;min-width:0}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);grid-template-areas:"view party" "log cmd";gap:26px 20px;align-items:stretch}
+#viewbox{grid-area:view;display:flex;flex-direction:column}
+#partybox{grid-area:party}
+#logbox{grid-area:log;display:flex;flex-direction:column}
+#cmdbox{grid-area:cmd}
 /* 창틀: 가는 이중선 + 모서리 마름모 */
 .win{position:relative;background:linear-gradient(180deg,var(--win2),var(--win) 40%);border:1px solid var(--line);
   outline:1px solid rgba(217,202,169,.28);outline-offset:4px;padding:18px 14px 14px;min-width:0;margin:5px}
@@ -41,9 +44,9 @@ canvas{display:block;width:100%;height:auto;max-width:100%;background:#050304}
 .place h2{font:400 26px/1.2 var(--f-display);margin:0;color:var(--gold);text-wrap:balance}
 .place p{margin:0;max-width:60ch}
 .muted{color:var(--dim)}
-.loc{margin-top:10px;color:var(--dim);font-size:13px;min-height:1.6em}
+.loc{margin-top:auto;padding-top:10px;color:var(--dim);font-size:13px;min-height:1.6em}
 #recent{display:none;margin-top:8px;font-size:13px;line-height:1.5;border-top:1px dashed #3a2e2a;padding-top:8px}
-#log{height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;font-size:14px}
+#log{flex:1 1 0;min-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;font-size:14px}
 .l{white-space:pre-wrap}
 .l.sys{color:var(--dim)}.l.bad{color:var(--bad)}.l.good{color:var(--hp)}.l.gold{color:var(--gold)}.l.mag{color:var(--mag)}
 .l.round{color:var(--dim);text-align:center;letter-spacing:.3em;font-size:12px}
@@ -103,13 +106,38 @@ canvas{display:block;width:100%;height:auto;max-width:100%;background:#050304}
 .slot{display:grid;gap:2px}
 .slot small{color:var(--dim);font-size:12px}
 .store{font-size:12px;color:var(--dim);margin:0}
-#mapwrap{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
-#map{width:156px;height:156px;flex:none;border:1px solid #4a3c35}
-.keys{font-size:12px;color:var(--dim);line-height:1.8}
+.keys{margin:0;font-size:12px;color:var(--dim);line-height:1.7}
 .end{display:grid;gap:12px;justify-items:start;padding:6px 0}
 .end h2{font:400 34px/1.2 var(--f-display);margin:0}
 footer{font-size:12px;color:var(--dim);text-align:center;line-height:1.8}
 footer a{color:var(--dim)}
+/* 시설 창 (모달) */
+#modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.mback{position:absolute;inset:0;background:rgba(5,3,4,.74);backdrop-filter:blur(3px)}
+.mwin{position:relative;width:min(660px,100%);max-height:min(86vh,780px);display:flex;flex-direction:column;margin:0;padding:0}
+.mwin.enter{animation:mIn .28s ease-out}
+.mwin:focus{outline:none}
+@keyframes mIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.mhead{display:flex;align-items:center;gap:14px;padding:18px 18px 14px;border-bottom:1px solid #3a2e2a}
+.mhead>svg{width:52px;height:52px;fill:var(--line);filter:drop-shadow(0 0 8px rgba(163,36,29,.6));flex:none}
+.mhead h2{font:400 26px/1.2 var(--f-display);color:var(--gold);margin:0}
+.mhead p{margin:2px 0 0;font-size:14px;color:var(--dim)}
+.mgold{margin-left:auto;text-align:right;font-size:12px;color:var(--dim);white-space:nowrap;line-height:1.3}
+.mgold b{color:var(--gold);font-size:18px}
+.mbody{overflow-y:auto;padding:6px 18px 18px;display:grid;gap:0;font-size:15px}
+.msec{font:15px var(--f-display);letter-spacing:.25em;color:var(--gold);margin:16px 0 2px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.msec .store{letter-spacing:0;font-family:var(--f-body)}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:baseline;padding:12px 0;border-bottom:1px dashed #3a2e2a}
+.mrow .nm{font-weight:700;font-size:16px}
+.mrow .pr{color:var(--gold);text-align:right;max-width:16em}
+.mrow .ds{grid-column:1/3;font-size:14px;color:var(--dim)}
+.mrow .btns{grid-column:1/3;margin-top:6px}
+.mbody>.btns{margin-top:8px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid #3a2e2a;margin-top:8px}
+.tab{font:16px var(--f-display);letter-spacing:.2em;color:var(--dim);background:none;border:0;border-bottom:2px solid transparent;padding:8px 18px;margin-bottom:-1px;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--gold);border-bottom-color:var(--gold)}
+.tab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 /* 등록소 */
 .cf{display:grid;gap:16px}
 .fld{display:grid;gap:8px}
@@ -144,11 +172,10 @@ footer a{color:var(--dim)}
 .stline{font-size:12px;color:var(--dim)}
 .btn,.chip,.mini,#view{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 @media (max-width:840px){
-  .grid{grid-template-columns:minmax(0,1fr)}
-  .col{display:contents}
-  #viewbox{order:1}#cmdbox{order:2}#partybox{order:3}#logbox{order:4}#mapbox{order:5}
+  .grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"view" "cmd" "party" "log"}
   #recent{display:block}
-  #log{height:150px}
+  #log{flex:none;height:160px;min-height:0}
+  .mhead{flex-wrap:wrap}
   header{padding-bottom:8px}
   .hud{font-size:13px}
 }
@@ -162,24 +189,17 @@ footer a{color:var(--dim)}
     <div class="hud" id="hud"></div>
   </header>
   <div class="grid">
-    <div class="col">
-      <section class="win" id="viewbox"><span class="cap" id="viewcap">시야</span>
-        <canvas id="view" width="480" height="300" aria-label="1인칭 미궁 시야"></canvas>
-        <div class="place" id="place" hidden></div>
-        <div class="loc" id="loc"></div>
-        <div id="recent" aria-hidden="true"></div>
-      </section>
-      <section class="win" id="logbox"><span class="cap">기록</span><div id="log" aria-live="polite"></div></section>
-    </div>
-    <div class="col">
-      <section class="win" id="partybox"><span class="cap">파티</span><div class="party" id="party"></div><div id="qtrack"></div></section>
-      <section class="win" id="cmdbox"><span class="cap">명령</span><div id="cmd"></div></section>
-      <section class="win" id="mapbox"><span class="cap">지도</span>
-        <div id="mapwrap"><canvas id="map" width="156" height="156" aria-label="탐험한 지도"></canvas>
-          <div class="keys" id="keys">이동: W A S D / 방향키<br>뒤돌기: Q · 후퇴: X<br>버튼: 숫자 1–9 (버튼 옆 번호)</div></div>
-      </section>
-    </div>
+    <section class="win" id="viewbox"><span class="cap" id="viewcap">시야</span>
+      <canvas id="view" width="480" height="300" aria-label="1인칭 화면"></canvas>
+      <div class="place" id="place" hidden></div>
+      <div class="loc" id="loc"></div>
+      <div id="recent" aria-hidden="true"></div>
+    </section>
+    <section class="win" id="partybox"><span class="cap">파티</span><div class="party" id="party"></div><div id="qtrack"></div></section>
+    <section class="win" id="logbox"><span class="cap">기록</span><div id="log" aria-live="polite"></div></section>
+    <section class="win" id="cmdbox"><span class="cap">명령</span><div id="cmd"></div></section>
   </div>
+  <div id="modal" hidden></div>
   <footer>도트 그림: 0x72 「DungeonTileset II」 (CC0) · 아이콘: <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a> — Lorc, Delapouite, Skoll, DarkZaitzev (CC BY 3.0)</footer>
 </div>
 
@@ -361,7 +381,8 @@ const pDef = m => CLS[m.cls].def + m.defB + bsum(m,'def');
 
 let S, busy = false;
 // 화면 전용 상태 (저장하지 않음)
-const UI = {slots:null, confirm:null, saving:false};
+const UI = {slots:null, confirm:null, saving:false, scene:'square', fac:null, anim:null, fadeIn:0, shopTab:'buy',
+  map:(()=>{ try{ return localStorage.getItem('lirgard-map')==='1'; }catch(e){ return false; } })()};
 
 function base(mode){
   return {mode,townView:'main',floor:1,x:1,y:1,dir:1,gold:120,potions:2,party:[],
@@ -372,6 +393,7 @@ function base(mode){
 function normalize(){
   S.kills ||= {}; S.chests ||= 0; S.maxFloor ||= 0; S.quests ||= {acc:{},done:[],ready:[]};
   S.quests.ready ||= [];
+  if(S.townView==='save') S.townView='inn';
   S.party.forEach(m=>{ m.bf ||= []; });
   if(S.combat && S.combat.enemies.some(e=>!e.id)){ S.combat=null; if(S.mode==='combat') S.mode='dungeon'; }
 }
@@ -424,7 +446,7 @@ async function loadFrom(n){
   if(!rec) return;
   try{ S=JSON.parse(rec.state); }catch(e){ return; }
   normalize();
-  S.mode='town'; S.townView='main'; S.combat=null; busy=false; UI.confirm=null;
+  S.mode='town'; S.townView='main'; S.combat=null; busy=false; UI.confirm=null; UI.scene='square'; UI.fadeIn=now();
   log(`모험 기록부 ${n}번을 펼쳤다. 파티가 여관에서 눈을 뜬다.`,'gold'); render();
 }
 
@@ -576,7 +598,7 @@ function onEnter(){
 function stairs(){
   const ch=cell(S.x,S.y);
   if(ch==='<'){
-    if(S.floor===1){ S.mode='town'; S.townView='main'; log('파티는 지상으로 돌아왔다. 새벽 종소리가 울린다.','good'); return render(); }
+    if(S.floor===1){ S.mode='town'; S.townView='main'; UI.scene='square'; UI.fadeIn=now(); log('파티는 지상으로 돌아왔다. 새벽 종소리가 울린다.','good'); return render(); }
     S.floor--; const p=find(S.floor,'>'); S.x=p.x; S.y=p.y;
   } else if(ch==='>'){ S.floor++; const p=find(S.floor,'<'); S.x=p.x; S.y=p.y; }
   S.dir=openDir(S.x,S.y); markExplored(); arrive(); log(FLOOR_TEXT[S.floor],'sys'); render();
@@ -634,6 +656,20 @@ function buy(v){
   if(id==='potion'){ S.potions++; log(`치유 물약을 샀다. (보유 ${S.potions})`,'good'); }
   else { const m=S.party[+who]; m.gear.push(id); m.atkB+=it.atk||0; m.defB+=it.def||0; m.magB+=it.mag||0; log(`${J(m.name,'이','가')} ${J(it.n,'을','를')} 장비했다.`,'good'); }
   render();
+}
+function sell(v){
+  if(v==='potion'){ if(S.potions<=0) return render(); S.potions--; S.gold+=12; log('치유 물약 1개를 12G에 팔았다.','gold'); return render(); }
+  const [id,who]=v.split(':'), m=S.party[+who], it=SHOP.find(i=>i.id===id);
+  if(!m || !m.gear.includes(id)) return render();
+  const p=Math.floor(it.p/2);
+  m.gear=m.gear.filter(g=>g!==id); m.atkB-=it.atk||0; m.defB-=it.def||0; m.magB-=it.mag||0; S.gold+=p;
+  log(`${m.name}의 ${J(it.n,'을','를')} ${p}G에 팔았다.`,'gold'); render();
+}
+function cure(i){
+  const m=S.party[i], cost=15;
+  if(S.gold<cost){ log('헌금이 부족하다.','bad'); return render(); }
+  S.gold-=cost; ['poison','curse','weak'].forEach(k=>delBf(m,k));
+  log(`사제가 ${m.name}의 몸에서 독과 저주를 씻어냈다. (−${cost}G)`,'good'); render();
 }
 function rez(i){
   const m=S.party[i], cost=60*m.lv;
@@ -807,7 +843,7 @@ function victory(){
 }
 
 // ───────── 그리기 ─────────
-const view=$('#view'), ctx=view.getContext('2d'), mapc=$('#map'), mctx=mapc.getContext('2d');
+const view=$('#view'), ctx=view.getContext('2d');
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const W=480,H=300,INS=[0,58,108,144,168,184];
 const R=d=>{const i=INS[d],v=i*H/W;return {l:i,r:W-i,t:v,b:H-v};};
@@ -927,6 +963,7 @@ function drawView(t){
     g.fillText('‹',20,H/2+10); g.fillText('›',W-20,H/2+10); g.fillText('︿',W/2,H-12); g.textAlign='left';
   }
   drawFX(t);
+  if(UI.map && S.mode==='dungeon') drawAutomap(t);
   g.restore();
 }
 function drawEnemies(t){
@@ -955,25 +992,230 @@ function drawEnemies(t){
     g.restore();
   }
 }
-function drawMap(){
-  const g=mctx, sz=13, f=S.floor, ex=new Set(S.explored[f]);
-  g.fillStyle='#050304'; g.fillRect(0,0,156,156);
-  MAPS[f].forEach((row,y)=>[...row].forEach((ch,x)=>{
-    if(ex.has(`${x},${y}`)){
-      const c=cell(x,y); g.fillStyle='#2c2124'; g.fillRect(x*sz,y*sz,sz,sz);
-      if(c==='<'||c==='>'){ g.fillStyle=css('--line'); g.font='11px serif'; g.fillText(c,x*sz+3,y*sz+10); }
-      if(c==='T'){ g.fillStyle=css('--gold'); g.fillRect(x*sz+4,y*sz+4,5,5); }
-    } else if(ch==='#' && [[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>ex.has(`${x+a},${y+b}`))){
-      g.fillStyle='#6b5a4d'; g.fillRect(x*sz+1,y*sz+1,sz-2,sz-2);
-    }
-  }));
-  const px=S.x*sz+sz/2, py=S.y*sz+sz/2, a=[-Math.PI/2,0,Math.PI/2,Math.PI][S.dir];
-  g.fillStyle=css('--bad'); g.beginPath();
-  g.moveTo(px+Math.cos(a)*5,py+Math.sin(a)*5); g.lineTo(px+Math.cos(a+2.4)*5,py+Math.sin(a+2.4)*5); g.lineTo(px+Math.cos(a-2.4)*5,py+Math.sin(a-2.4)*5); g.fill();
+// 디아블로식 반투명 지도: 미궁 화면 위에 겹쳐 그린다. 파티가 늘 가운데
+function drawAutomap(){
+  const g=ctx, sz=22, ex=S.explored[S.floor], ox=W/2-(S.x+0.5)*sz, oy=H/2-(S.y+0.5)*sz;
+  g.save();
+  g.fillStyle='rgba(5,3,4,.38)'; g.fillRect(-10,-10,W+20,H+20);
+  g.lineWidth=2.2; g.strokeStyle='rgba(235,205,150,.95)'; g.shadowColor='rgba(235,205,150,.7)'; g.shadowBlur=6;
+  for(const k of ex){
+    const [x,y]=k.split(',').map(Number), px=ox+x*sz, py=oy+y*sz;
+    g.fillStyle='rgba(217,202,169,.13)'; g.fillRect(px,py,sz,sz);
+    g.beginPath();
+    if(wall(x,y-1)){ g.moveTo(px,py); g.lineTo(px+sz,py); }
+    if(wall(x+1,y)){ g.moveTo(px+sz,py); g.lineTo(px+sz,py+sz); }
+    if(wall(x,y+1)){ g.moveTo(px,py+sz); g.lineTo(px+sz,py+sz); }
+    if(wall(x-1,y)){ g.moveTo(px,py); g.lineTo(px,py+sz); }
+    g.stroke();
+    const c=cell(x,y);
+    if(c==='<'||c==='>'){ g.fillStyle='rgba(233,223,198,.9)'; g.font='13px "Gowun Batang",serif'; g.textAlign='center'; g.fillText(c==='<'?'▲':'▼',px+sz/2,py+sz*0.7); }
+    if(c==='T'){ g.fillStyle=css('--gold'); g.fillRect(px+sz/2-3,py+sz/2-3,6,6); }
+  }
+  g.shadowBlur=0;
+  const cx=W/2, cy=H/2, a=[-Math.PI/2,0,Math.PI/2,Math.PI][S.dir];
+  g.fillStyle=css('--bad'); g.shadowColor=css('--bad'); g.shadowBlur=10; g.beginPath();
+  g.moveTo(cx+Math.cos(a)*8,cy+Math.sin(a)*8); g.lineTo(cx+Math.cos(a+2.5)*7,cy+Math.sin(a+2.5)*7); g.lineTo(cx+Math.cos(a-2.5)*7,cy+Math.sin(a-2.5)*7); g.fill();
+  g.shadowBlur=0; g.textAlign='left'; g.font='12px "Gowun Batang",serif'; g.fillStyle='rgba(217,202,169,.75)';
+  g.fillText(`지하 ${S.floor}층 · 지도`,12,20);
+  g.restore();
 }
-// 미궁·전투 화면은 매 프레임 다시 그린다 (촛불, 몬스터 움직임, 이펙트)
+
+// ── 마을 장면 ──
+// 시설 위치: side −1 왼쪽, 1 오른쪽, 0 길 끝 / z 광장에서의 거리
+const TOWN = {
+  inn:   {side:-1, z:2.2, ic:'delapouite_tavern-sign', n:'어부의 잔', d:'따뜻한 불빛과 맥주 냄새가 새어 나온다.'},
+  shop:  {side: 1, z:2.2, ic:'lorc_anvil',             n:'볼칸 상회', d:'대장간 불이 꺼지지 않는 무구점이다.'},
+  quests:{side:-1, z:4.3, ic:'lorc_scroll-unfurled',   n:'모험가 길드', d:'의뢰 양피지가 빼곡히 박힌 게시판이 서 있다.'},
+  gate:  {side: 1, z:5.5, ic:'lorc_candle-skull',      n:'지하묘지 입구', d:'철창 너머로 계단이 어둠 속으로 이어진다.'},
+  temple:{side: 0, z:9,   ic:'delapouite_church',      n:'카다르 사원', d:'장미창이 붉게 빛나는 사원이다.'},
+};
+const HOUSE_H=[1.9,2.4,1.7,2.2,2.5,1.8,2.3,2.0];
+const STARS=Array.from({length:44},(_,i)=>[(i*97.3)%W,(i*41.7)%(H*0.42),((i*13)%10)/10]);
+const EYE=0.55, HZ=H*0.56;
+let camX=0, bob=0;
+// 마을 원근 투영: 세계 좌표(x 좌우, y 높이, z 앞쪽) → 화면
+function tp(x,y,z,cz){ const dz=Math.max(0.3,z-cz), s=(W*0.5)/dz; return [W/2+(x-camX)*s, HZ+bob+(EYE-y)*s, s]; }
+function quad(pts,fill,stroke,lw=1){ const g=ctx; g.beginPath(); pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y)); g.closePath(); if(fill){ g.fillStyle=fill; g.fill(); } if(stroke){ g.strokeStyle=stroke; g.lineWidth=lw; g.stroke(); } }
+const ease=p=>p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+const flick=(t,k=0)=>reduce?1:0.85+0.1*Math.sin(t/120+k)+0.05*Math.sin(t/53+k*2);
+function glow(x,y,r,rgb,a){ const gr=ctx.createRadialGradient(x,y,1,x,y,r); gr.addColorStop(0,`rgba(${rgb},${a})`); gr.addColorStop(1,`rgba(${rgb},0)`); ctx.fillStyle=gr; ctx.fillRect(x-r,y-r,r*2,r*2); }
+function drawSky(t){
+  const g=ctx, hz=HZ+bob; let gr=g.createLinearGradient(0,0,0,hz); gr.addColorStop(0,'#06040a'); gr.addColorStop(1,'#2e1b24'); g.fillStyle=gr; g.fillRect(-10,-10,W+20,hz+12);
+  STARS.forEach(([x,y,b])=>{ g.fillStyle=`rgba(233,223,198,${0.2+0.5*b*(reduce?1:0.6+0.4*Math.sin(t/700+x))})`; g.fillRect(x,y,1.5,1.5); });
+  const mx=W*0.8, my=46; glow(mx,my,64,'233,223,198',0.3);
+  g.fillStyle='#e9dfc6'; g.beginPath(); g.arc(mx,my,14,0,7); g.fill();
+  g.fillStyle='#0e0912'; g.beginPath(); g.arc(mx+6,my-4,12.5,0,7); g.fill();
+}
+function drawCathedral(cz,t){
+  const P=(x,y)=>tp(x,y,9,cz), L='rgba(217,202,169,.28)';
+  quad([P(-1.3,0),P(-1.3,2.4),P(-0.9,3.1),P(-0.5,2.5),P(-0.35,3.7),P(0,5.6),P(0.35,3.7),P(0.5,2.5),P(0.9,3.1),P(1.3,2.4),P(1.3,0)],'#110a0e',L);
+  quad([P(-1.45,2.3),P(-1.3,3.9),P(-1.15,2.3)],'#110a0e',L); quad([P(1.15,2.3),P(1.3,3.9),P(1.45,2.3)],'#110a0e',L);
+  const [rx,ry,s]=P(0,1.95), r=0.33*s, f=flick(t);
+  glow(rx,ry,r*3,'176,40,58',0.3*f);
+  const gr=ctx.createRadialGradient(rx,ry,1,rx,ry,r); gr.addColorStop(0,'#ffcf7a'); gr.addColorStop(.5,'#b0283a'); gr.addColorStop(1,'#3b1450');
+  ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(rx,ry,r,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(15,8,10,.9)'; ctx.lineWidth=Math.max(1,s*0.02); ctx.beginPath();
+  for(let i=0;i<8;i++){ const a=i*Math.PI/4; ctx.moveTo(rx,ry); ctx.lineTo(rx+Math.cos(a)*r,ry+Math.sin(a)*r); } ctx.stroke();
+  const [dl,db]=P(-0.28,0), [dr]=P(0.28,0), [,dt]=P(0,0.75), hw=(dr-dl)/2;
+  glow((dl+dr)/2,db,hw*4,'255,170,80',0.25*f);
+  ctx.fillStyle=`rgba(240,170,80,${0.7*f})`; ctx.beginPath(); ctx.moveTo(dl,db); ctx.lineTo(dl,dt); ctx.arc(dl+hw,dt,hw,Math.PI,0); ctx.lineTo(dr,db); ctx.closePath(); ctx.fill();
+}
+function drawHouse(side,k,cz,t){
+  const z0=k, z1=k+1; if(z1-cz<=0.35) return;
+  const za=Math.max(z0,cz+0.35), x=side*1.6, h=HOUSE_H[(k*2+(side>0?1:0))%8], zm=(z0+z1)/2;
+  const P=(y,z)=>tp(x,y,z,cz), sh=Math.max(0.18,1-(z0-cz)/9);
+  const c=(r,g,b)=>`rgb(${r*sh|0},${g*sh|0},${b*sh|0})`, edge=`rgba(217,202,169,${0.12+0.3*sh})`;
+  quad([P(0,za),P(0,z1),P(h,z1),P(h,za)],c(72,54,47),edge);
+  if(zm>cz+0.35) quad([P(h,za),P(h,z1),P(h+0.85,zm)],c(42,29,31),edge);
+  // 나무 골조
+  ctx.strokeStyle='rgba(20,12,10,.85)'; ctx.lineWidth=Math.max(1,3.2*sh); ctx.beginPath();
+  const Ln=(a,b)=>{ ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); };
+  [h*0.48,h-0.04].forEach(y=>Ln(P(y,za),P(y,z1)));
+  [z0+0.03,zm,z1-0.03].forEach(z=>{ if(z>za) Ln(P(0,z),P(h,z)); });
+  if(z0+0.03>za){ Ln(P(h*0.48,z0+0.03),P(h-0.04,zm)); Ln(P(h-0.04,z0+0.03),P(h*0.48,zm)); }
+  ctx.stroke();
+  // 창문
+  const lit=(k+(side>0?1:0))%3!==0, f=flick(t,k*1.7+side);
+  [[z0+0.16,z0+0.36],[z1-0.36,z1-0.16]].forEach(([a,b])=>{ if(a<=za) return;
+    quad([P(h*0.6,a),P(h*0.6,b),P(h*0.86,b),P(h*0.86,a)], lit?`rgba(240,170,80,${0.15+0.75*f*sh})`:c(18,12,12),'rgba(20,12,10,.9)',Math.max(1,2*sh));
+    if(lit){ const [wx,wy,s]=P(h*0.73,(a+b)/2); glow(wx,wy,0.5*s,'255,170,80',0.22*f); } });
+  // 문, 또는 지하묘지 철문
+  if(side===TOWN.gate.side && k===Math.floor(TOWN.gate.z)){
+    const a=z0+0.2, b=z1-0.2; if(a<=za) return;
+    quad([P(0,a),P(0,b),P(1.3,b),P(1.3,a)],'#050304','rgba(163,36,29,.9)',2);
+    const [gx,gy,s]=P(0.5,(a+b)/2); glow(gx,gy,0.9*s,'200,40,30',0.4*f);
+    ctx.strokeStyle='rgba(95,85,80,.95)'; ctx.lineWidth=Math.max(1,2*sh); ctx.beginPath();
+    for(let i=1;i<6;i++){ const z=a+(b-a)*i/6; Ln(P(0,z),P(1.3,z)); } ctx.stroke();
+  } else { const a=zm-0.1, b=zm+0.1; if(a>za) quad([P(0,a),P(0,b),P(0.62,b),P(0.62,a)],c(36,23,16),'rgba(20,12,10,.9)'); }
+}
+function drawSign(key,cz,t){
+  const T=TOWN[key]; if(!T.side || T.z-cz<0.55) return;
+  const [bx1,by]=tp(T.side*1.6,1.5,T.z,cz), [bx2]=tp(T.side*1.22,1.5,T.z,cz), [,cy,s]=tp(T.side*1.3,1.15,T.z,cz);
+  const w=0.4*s, sw=reduce?0:Math.sin(t/900+T.z*3)*0.05;
+  ctx.strokeStyle='#1a1210'; ctx.lineWidth=Math.max(1,s*0.035); ctx.beginPath(); ctx.moveTo(bx1,by); ctx.lineTo(bx2,by); ctx.stroke();
+  ctx.save(); ctx.translate(bx2,by); ctx.rotate(sw);
+  ctx.lineWidth=Math.max(1,s*0.012); ctx.beginPath(); ctx.moveTo(-w*0.3,0); ctx.lineTo(-w*0.3,cy-by-w/2); ctx.moveTo(w*0.3,0); ctx.lineTo(w*0.3,cy-by-w/2); ctx.stroke();
+  ctx.translate(0,cy-by);
+  ctx.fillStyle='#2a1c14'; ctx.fillRect(-w/2,-w/2,w,w); ctx.strokeStyle=css('--gold'); ctx.lineWidth=Math.max(1,s*0.014); ctx.strokeRect(-w/2,-w/2,w,w);
+  drawIcon(ctx,T.ic,0,0,w*0.8,'#f1e4c6','#a08a62');
+  if(w>34){ ctx.font=`${Math.min(15,w*0.2)|0}px "Gowun Batang",serif`; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.85)';
+    ctx.strokeText(T.n,0,w/2+16); ctx.fillStyle='#efe2c4'; ctx.fillText(T.n,0,w/2+16); }
+  ctx.restore();
+}
+function drawLamp(x,z,cz,t){
+  if(z-cz<0.45) return;
+  const [px,py]=tp(x,0,z,cz), [,ty,s]=tp(x,1.55,z,cz), f=flick(t,x*5+z);
+  ctx.strokeStyle='#120b0a'; ctx.lineWidth=Math.max(1,s*0.045); ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,ty); ctx.stroke();
+  glow(px,ty,0.95*s*f,'255,175,90',0.5);
+  ctx.fillStyle='#ffd08a'; ctx.fillRect(px-s*0.05,ty-s*0.08,s*0.1,s*0.13);
+}
+function drawTown(t){
+  const A=UI.anim, p=A?ease(Math.min(1,(t-A.t0)/A.dur)):0, cz=A?p*A.dz:0, g=ctx;
+  camX=A?p*p*A.side*0.55:0; bob=A&&!reduce?Math.sin(p*Math.PI*6)*2.5:0;
+  drawSky(t);
+  let gr=g.createLinearGradient(0,HZ+bob,0,H); gr.addColorStop(0,'#150f10'); gr.addColorStop(1,'#35271f'); g.fillStyle=gr; g.fillRect(-10,HZ+bob,W+20,H);
+  g.strokeStyle='rgba(0,0,0,.45)'; g.lineWidth=1; g.beginPath();
+  for(let z=Math.floor(cz*2)/2+0.5; z<9; z+=0.5){ const a=tp(-1.2,0,z,cz), b=tp(1.2,0,z,cz); g.moveTo(a[0],a[1]); g.lineTo(b[0],b[1]); }
+  [-1.2,-0.4,0.4,1.2].forEach(x=>{ const a=tp(x,0,cz+0.35,cz), b=tp(x,0,9,cz); g.moveTo(a[0],a[1]); g.lineTo(b[0],b[1]); });
+  g.stroke();
+  drawCathedral(cz,t);
+  for(let k=7;k>=0;k--){
+    drawHouse(-1,k,cz,t); drawHouse(1,k,cz,t);
+    if(k%3===1){ drawLamp(-1.3,k+0.5,cz,t); drawLamp(1.3,k+0.5,cz,t); }
+    for(const key in TOWN) if(TOWN[key].side && Math.floor(TOWN[key].z)===k) drawSign(key,cz,t);
+  }
+  gr=g.createLinearGradient(0,HZ-40,0,HZ+70); gr.addColorStop(0,'rgba(70,50,60,0)'); gr.addColorStop(.5,'rgba(70,50,60,.28)'); gr.addColorStop(1,'rgba(70,50,60,0)'); g.fillStyle=gr; g.fillRect(0,HZ-40,W,110);
+  gr=g.createRadialGradient(W/2,H/2,W*0.25,W/2,H/2,W*0.75); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,.6)'); g.fillStyle=gr; g.fillRect(-10,-10,W+20,H+20);
+  camX=0; bob=0;
+}
+// 시설에 도착했을 때 보이는 건물 정면
+function drawFacadeView(fac,t){
+  const g=ctx, T=TOWN[fac], f=flick(t), temple=fac==='temple';
+  drawSky(t);
+  let gr=g.createLinearGradient(0,250,0,H); gr.addColorStop(0,'#1a1311'); gr.addColorStop(1,'#35271f'); g.fillStyle=gr; g.fillRect(-10,250,W+20,60);
+  g.strokeStyle='rgba(0,0,0,.4)'; g.lineWidth=1; g.beginPath(); for(let i=0;i<4;i++){ g.moveTo(0,260+i*11); g.lineTo(W,260+i*11); } g.stroke();
+  const L=temple?92:58, Rr=temple?388:422, top=temple?112:86, base=256, edge='rgba(217,202,169,.5)';
+  quad([[L,top],[Rr,top],[Rr,base],[L,base]],temple?'#2c2226':'#3c2b25',edge,1.5);
+  quad([[L-12,top],[W/2,temple?-40:top-98],[Rr+12,top]],'#211518',edge,1.5);
+  g.strokeStyle='#160d0b'; g.lineWidth=5; g.beginPath();
+  if(temple){ g.lineWidth=1; g.strokeStyle='rgba(0,0,0,.45)'; for(let y=top+18;y<base;y+=18){ g.moveTo(L,y); g.lineTo(Rr,y); } }
+  else { const xs=[L+4,W/2-84,W/2+84,Rr-4]; g.moveTo(L,top+74); g.lineTo(Rr,top+74); xs.forEach(x=>{ g.moveTo(x,top); g.lineTo(x,base); });
+    [[L+4,W/2-84],[W/2+84,Rr-4]].forEach(([a,b])=>{ g.moveTo(a,top+4); g.lineTo(b,top+70); g.moveTo(b,top+4); g.lineTo(a,top+70); }); }
+  g.stroke();
+  if(temple){
+    quad([[L-16,top-10],[L,top-10],[L,base],[L-16,base]],'#1c1316',edge); quad([[Rr,top-10],[Rr+16,top-10],[Rr+16,base],[Rr,base]],'#1c1316',edge);
+    const rx=W/2, ry=top-56, r=30; glow(rx,ry,r*3,'176,40,58',0.35*f);
+    const rg=g.createRadialGradient(rx,ry,1,rx,ry,r); rg.addColorStop(0,'#ffd88a'); rg.addColorStop(.5,'#b0283a'); rg.addColorStop(1,'#3b1450');
+    g.fillStyle=rg; g.beginPath(); g.arc(rx,ry,r,0,7); g.fill(); g.strokeStyle='#120a0c'; g.lineWidth=2; g.beginPath();
+    for(let i=0;i<8;i++){ const a=i*Math.PI/4; g.moveTo(rx,ry); g.lineTo(rx+Math.cos(a)*r,ry+Math.sin(a)*r); } g.stroke();
+    [[L+30,top+24],[Rr-52,top+24]].forEach(([x,y])=>{ const sg=g.createLinearGradient(x,y,x,y+80); sg.addColorStop(0,`rgba(200,60,80,${0.8*f})`); sg.addColorStop(1,`rgba(90,50,160,${0.8*f})`);
+      g.fillStyle=sg; g.beginPath(); g.moveTo(x,y+80); g.lineTo(x,y+14); g.quadraticCurveTo(x+11,y-6,x+22,y+14); g.lineTo(x+22,y+80); g.closePath(); g.fill(); g.strokeStyle='#120a0c'; g.stroke(); });
+  } else {
+    [[L+24,top+14],[Rr-84,top+14]].forEach(([x,y],i)=>{ const forge=fac==='shop'&&i===0;
+      quad([[x,y],[x+60,y],[x+60,y+44],[x,y+44]],forge?`rgba(255,110,40,${0.85*f})`:`rgba(240,170,80,${0.8*f})`,'#160d0b',3);
+      glow(x+30,y+22,70,forge?'255,90,30':'255,170,80',0.25*f);
+      g.strokeStyle='#160d0b'; g.lineWidth=2; g.beginPath(); g.moveTo(x+30,y); g.lineTo(x+30,y+44); g.moveTo(x,y+22); g.lineTo(x+60,y+22); g.stroke(); });
+    g.fillStyle=`rgba(240,170,80,${0.8*f})`; g.beginPath(); g.arc(W/2,top-40,12,0,7); g.fill(); g.strokeStyle='#160d0b'; g.lineWidth=3; g.stroke();
+  }
+  // 문
+  const hw=temple?48:38, dt=temple?base-118:base-96;
+  glow(W/2,base+6,hw*3,'255,170,80',0.3*f);
+  const dg=g.createLinearGradient(0,dt,0,base); dg.addColorStop(0,`rgba(255,200,120,${0.9*f})`); dg.addColorStop(1,`rgba(200,110,40,${0.9*f})`);
+  g.fillStyle=dg; g.beginPath(); g.moveTo(W/2-hw,base); g.lineTo(W/2-hw,dt+hw); g.arc(W/2,dt+hw,hw,Math.PI,0); g.lineTo(W/2+hw,base); g.closePath(); g.fill();
+  g.strokeStyle='#160d0b'; g.lineWidth=4; g.stroke();
+  g.fillStyle='#2a1a12'; g.fillRect(W/2-hw,dt+hw,hw*0.55,base-dt-hw); g.fillRect(W/2+hw*0.45,dt+hw,hw*0.55,base-dt-hw);
+  // 현판
+  g.fillStyle='#1c120e'; g.fillRect(W/2-92,dt-36,184,28); g.strokeStyle=css('--gold'); g.lineWidth=1.5; g.strokeRect(W/2-92,dt-36,184,28);
+  g.font='18px "Song Myung","Gowun Batang",serif'; g.textAlign='center'; g.fillStyle=css('--gold'); g.fillText(T.n,W/2,dt-15); g.textAlign='left';
+  // 걸린 간판
+  if(!temple){ const sx=Rr+26, sy=top+70, w=46, sw=reduce?0:Math.sin(t/900)*0.05;
+    g.strokeStyle='#1a1210'; g.lineWidth=4; g.beginPath(); g.moveTo(Rr,top+30); g.lineTo(sx+10,top+30); g.stroke();
+    g.save(); g.translate(sx,top+30); g.rotate(sw); g.lineWidth=1.5; g.beginPath(); g.moveTo(-12,0); g.lineTo(-12,sy-top-30-w/2); g.moveTo(12,0); g.lineTo(12,sy-top-30-w/2); g.stroke();
+    g.translate(0,sy-top-30); g.fillStyle='#2a1c14'; g.fillRect(-w/2,-w/2,w,w); g.strokeStyle=css('--gold'); g.strokeRect(-w/2,-w/2,w,w); drawIcon(g,T.ic,0,0,w*0.8,'#f1e4c6','#a08a62'); g.restore(); }
+  // 시설마다 다른 소품
+  if(fac==='inn'){ [W/2-hw-22,W/2+hw+22].forEach(x=>{ glow(x,dt+20,40,'255,180,90',0.5*f); g.fillStyle='#ffd08a'; g.fillRect(x-5,dt+12,10,14); }); }
+  if(fac==='shop' && !reduce){ for(let i=0;i<10;i++){ const q=((t/1400)+i/10)%1; g.fillStyle=`rgba(255,${150+i*8},60,${1-q})`; g.fillRect(L+40+((i*23)%40),top+14-q*60,2,2); } }
+  if(fac==='quests'){ const bx=W/2-hw-104, by=base-104; g.fillStyle='#3a2716'; g.fillRect(bx,by,84,86); g.strokeStyle='#160d0b'; g.lineWidth=3; g.strokeRect(bx,by,84,86);
+    [[6,8,30,34],[42,6,34,28],[10,48,32,30],[48,40,28,38]].forEach(([x,y,w,h],i)=>{ g.save(); g.translate(bx+x+w/2,by+y+h/2); g.rotate((i%2?1:-1)*0.06); g.fillStyle='#e6d6b0'; g.fillRect(-w/2,-h/2,w,h);
+      g.strokeStyle='rgba(60,40,30,.6)'; g.lineWidth=1; g.beginPath(); for(let l=-h/2+6;l<h/2-3;l+=5){ g.moveTo(-w/2+4,l); g.lineTo(w/2-4,l); } g.stroke(); g.fillStyle='#a3241d'; g.fillRect(-2,-h/2-1,4,4); g.restore(); }); }
+  if(temple){ [W/2-hw-18,W/2+hw+18].forEach((x,i)=>{ for(let j=0;j<3;j++){ const cx=x+(j-1)*7; g.fillStyle='#e8dcc0'; g.fillRect(cx-1.5,base-18,3,14); glow(cx,base-21,10,'255,190,90',0.7*flick(t,j+i*3)); } }); }
+  gr=g.createRadialGradient(W/2,H/2,W*0.3,W/2,H/2,W*0.75); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,.55)'); g.fillStyle=gr; g.fillRect(-10,-10,W+20,H+20);
+}
+// 마을에서 시설로 걸어간다. 도착하면 건물 정면과 시설 창이 열린다
+function goTo(fac){
+  if(UI.anim || fac===S.townView) return;
+  const T=TOWN[fac];
+  S.townView='main'; UI.scene='square'; UI.confirm=null;
+  UI.anim={t0:now(), dur:reduce?200:1100, dz:Math.max(0,T.z-(fac==='temple'?3:1.2)), side:T.side, then:()=>{
+    UI.fadeIn=now();
+    if(fac==='gate'){ log(T.d,'sys'); return enterDungeon(); }
+    UI.scene='facade'; UI.fac=fac; S.townView=fac;
+    if(fac==='inn'){ UI.slots=null; refreshSlots(); }
+    log(`${T.n}. ${T.d}`,'sys'); render();
+  }};
+  busy=true; render();
+}
+function closeModal(){
+  if(S.mode!=='town') return;
+  S.townView='main'; UI.scene='square'; UI.fac=null; UI.fadeIn=now(); UI.confirm=null; render();
+}
+const modalOpen = () => S && S.mode==='town' && S.townView!=='main' && !UI.anim;
+function toggleMap(){ UI.map=!UI.map; try{ localStorage.setItem('lirgard-map',UI.map?'1':'0'); }catch(e){} render(); }
+function drawFrame(t){
+  if(S.mode==='town'){ if(UI.scene==='facade' && UI.fac && !UI.anim) drawFacadeView(UI.fac,t); else drawTown(t); }
+  else drawView(t);
+  if(UI.fadeIn && t-UI.fadeIn<450){ ctx.fillStyle=`rgba(0,0,0,${1-(t-UI.fadeIn)/450})`; ctx.fillRect(0,0,W,H); }
+  if(UI.anim){ const p=(t-UI.anim.t0)/UI.anim.dur; if(p>0.75){ ctx.fillStyle=`rgba(0,0,0,${Math.min(1,(p-0.75)/0.25)})`; ctx.fillRect(0,0,W,H); } }
+}
+// 마을·미궁·전투 화면은 매 프레임 다시 그린다 (촛불, 몬스터 움직임, 이펙트, 걷기)
 let raf=0;
-function loop(t){ raf=0; if(S && (S.mode==='dungeon'||S.mode==='combat') && !document.hidden){ drawView(t); raf=requestAnimationFrame(loop); } }
+const animated = () => S && ['dungeon','combat','town'].includes(S.mode);
+function loop(t){
+  raf=0; if(!animated() || document.hidden) return;
+  if(UI.anim && t-UI.anim.t0>=UI.anim.dur){ const f=UI.anim.then; UI.anim=null; busy=false; f(); }
+  if(animated()) drawFrame(t);
+  if(!raf) raf=requestAnimationFrame(loop);
+}
 function kick(){ if(!raf) raf=requestAnimationFrame(loop); }
 document.addEventListener('visibilitychange',kick);
 
@@ -994,13 +1236,7 @@ function placeHTML(){
   if(S.mode==='create') return createHTML();
   if(S.mode==='won') return hero('lorc_gothic-cross','귀환',`<p>마을 사람들이 광장에 모였다. 영주가 직접 서약의 검을 건넨다. 리르가드의 미궁은 이제 조용하다.</p>`);
   if(S.mode==='dead') return hero('lorc_gothic-cross','전멸',`<p>파티의 횃불이 꺼졌다. 마지막으로 기록부에 남긴 순간부터 다시 시작할 수 있다.</p>`);
-  const v=S.townView;
-  if(v==='inn'||v==='save') return hero('delapouite_tavern-sign','어부의 잔 · 여관',`<p>주인이 장부를 넘긴다. "레벨은 푹 자고 일어나야 오르는 법이지. 모험 기록부도 여기 맡겨 두게."</p><p class="muted">경험치가 쌓인 동료는 여기서 쉬어야 레벨이 오른다. 객실에서 자면 독과 저주도 풀린다. 진행은 여관에서만 기록부에 남길 수 있다.</p>`);
-  if(v==='shop') return hero('lorc_anvil','볼칸 상회',`<p>망치 소리 사이로 드워프가 소리친다. "돈 있으면 사고, 없으면 미궁에서 벌어 와!"</p>`);
-  if(v==='temple') return hero('delapouite_church','카다르 사원',`<p>향 냄새가 짙다. 사제가 말한다. "헌금만 충분하다면, 신께서는 영혼을 돌려보내 주십니다."</p>`);
-  if(v==='quests') return hero('lorc_scroll-unfurled','길드 의뢰 게시판',`<p>못 박힌 양피지들이 바람에 펄럭인다. 서기가 말한다. "한 번에 ${QMAX}건까지. 끝내면 여기서 보고하고 보수를 받아 가시오."</p>`);
-  if(v==='quit') return hero('lorc_candle-skull','타이틀로',`<p>여관에서 기록하지 않은 진행은 사라진다. 정말 돌아갈까?</p>`);
-  return hero('lorc_gothic-cross','리르가드 마을',`<p>지하묘지의 입구를 둘러싸고 세워진 작은 마을. 모험가들은 이곳에서 쉬고, 장비를 사고, 의뢰를 받아 다시 어둠 속으로 내려간다.</p><p class="muted">목표: 지하 3층의 마도왕 베르가스를 쓰러뜨려라.</p>`);
+  return '';
 }
 function slotButtons(act){
   if(!UI.slots) return `<p class="muted">기록부를 펼치는 중…</p>`;
@@ -1010,18 +1246,66 @@ function slotButtons(act){
     return B(`<span class="slot"><span>기록 ${n}</span>${slotLine(rec)}</span>`,act,n,{wide:1,dis:(act==='load'&&!rec)||UI.saving});
   }).join('');
 }
-function questsHTML(){
-  const rows = QUESTS.filter(q=>!q.main && !S.quests.done.includes(q.id)).map(q=>{
-    const acc = q.id in S.quests.acc, ready = S.quests.ready.includes(q.id), full = sideActive().length>=QMAX;
-    const reward = [`${q.gold}G`, q.xp?`경험치 ${q.xp}`:'', q.potions?`물약 ${q.potions}`:''].filter(Boolean).join(' · ');
-    const btn = ready ? B('보고하고 보수를 받는다','claim',q.id,{primary:1})
-      : acc ? B(`진행 중 ${qProgress(q)}/${q.need}`,'noop','',{dis:1})
-      : B('의뢰를 받는다','accept',q.id,{dis:full,sub:full?`최대 ${QMAX}건`:''});
-    return `<div class="item"><div class="t"><span>${q.n}</span><b>${reward}</b></div><p>${q.d}</p><div class="btns">${btn}</div></div>`;
-  });
-  const done = S.quests.done.length ? `<p class="hint">완료한 의뢰 ${S.quests.done.length}건</p>` : '';
-  return `<div class="quests">${rows.join('') || '<p class="muted">남은 의뢰가 없다.</p>'}${done}${B('광장으로','town','main')}</div>`;
+// ── 시설 창 ──
+const mHead=(ic,title,sub)=>`<div class="mhead">${svgIcon(ic)}<div><h2 id="mtitle">${title}</h2><p>${sub}</p></div>
+  <div class="mgold">금화<br><b>${S.gold}G</b><br>물약 ${S.potions}</div><button class="mini" data-a="close" aria-label="닫기">✕</button></div>`;
+const mRow=(name,desc,price,btns)=>`<div class="mrow"><span class="nm">${name}</span><span class="pr">${price}</span>${desc?`<span class="ds">${desc}</span>`:''}${btns?`<div class="btns">${btns}</div>`:''}</div>`;
+function modalHTML(){
+  const v=S.townView;
+  if(v==='inn'){
+    const al=living().length, ups=living().filter(m=>m.xp>=need(m.lv)).map(m=>m.name);
+    return mHead(TOWN.inn.ic,'어부의 잔 · 여관','"레벨은 푹 자고 일어나야 오르는 법이지."')+`<div class="mbody">
+      <div class="msec">휴식</div>
+      ${mRow('객실','HP·MP 모두 회복, 독·저주 해제, 레벨 업',`${al*10}G`,B('객실에서 잔다','inn','room',{dis:S.gold<al*10,primary:1}))}
+      ${mRow('마구간','MP만 회복, 레벨 업','무료',B('마구간에서 잔다','inn','stable'))}
+      <p class="hint">${ups.length?`레벨이 오를 수 있는 동료: ${ups.join(', ')}`:'지금 레벨이 오를 동료는 없다.'}</p>
+      <div class="msec">모험 기록부 <span class="store">${UI.saving?'기록하는 중…':Store.label()}</span></div>
+      <div class="btns">${slotButtons('save')}</div></div>`;
+  }
+  if(v==='shop'){
+    const tab=UI.shopTab||'buy';
+    const tabs=`<div class="tabs" role="tablist">${[['buy','구입'],['sell','판매']].map(([k,n])=>`<button class="tab" role="tab" aria-selected="${tab===k}" data-a="tab" data-v="${k}">${n}</button>`).join('')}</div>`;
+    let list;
+    if(tab==='buy') list=SHOP.map(it=>{
+      const bs = it.id==='potion' ? B('1개 산다','buy','potion:0',{dis:S.gold<it.p})
+        : S.party.map((m,i)=>it.cls.includes(m.cls)?B(`${m.name}에게`,'buy',`${it.id}:${i}`,{dis:S.gold<it.p||m.gear.includes(it.id)||m.dead,sub:m.gear.includes(it.id)?'보유':''}):'').join('');
+      return mRow(it.n, it.id==='potion'?`${it.d} 지금 ${S.potions}개.`:`${it.d} · ${it.cls.join('·')} 전용`, `${it.p}G`, bs||'<span class="hint">쓸 수 있는 동료가 없다.</span>');
+    }).join('');
+    else {
+      const rows=[];
+      if(S.potions) rows.push(mRow('치유 물약',`지금 ${S.potions}개`,'12G',B('1개 판다','sell','potion')));
+      S.party.forEach((m,i)=>m.gear.forEach(id=>{ const it=SHOP.find(s=>s.id===id); rows.push(mRow(it.n,`${m.name}의 장비 · ${it.d}`,`${Math.floor(it.p/2)}G`,B('판다','sell',`${id}:${i}`))); }));
+      list=rows.join('')||'<p class="hint" style="padding:14px 0">팔 물건이 없다.</p>';
+    }
+    return mHead(TOWN.shop.ic,'볼칸 상회','"돈 있으면 사고, 없으면 미궁에서 벌어 와!"')+`<div class="mbody">${tabs}${list}</div>`;
+  }
+  if(v==='quests'){
+    const full=sideActive().length>=QMAX;
+    const rows=QUESTS.filter(q=>!q.main && !S.quests.done.includes(q.id)).map(q=>{
+      const acc=q.id in S.quests.acc, ready=S.quests.ready.includes(q.id);
+      const reward=[`${q.gold}G`, q.xp?`경험치 ${q.xp}`:'', q.potions?`물약 ${q.potions}`:''].filter(Boolean).join(' · ');
+      const btn = ready ? B('보고하고 보수를 받는다','claim',q.id,{primary:1})
+        : acc ? B(`진행 중 ${qProgress(q)}/${q.need}`,'noop','',{dis:1})
+        : B('의뢰를 받는다','accept',q.id,{dis:full,sub:full?`최대 ${QMAX}건`:''});
+      return mRow(q.n,q.d,reward,btn);
+    });
+    const done=S.quests.done.length?`<p class="hint" style="padding-top:12px">완료한 의뢰 ${S.quests.done.length}건</p>`:'';
+    return mHead(TOWN.quests.ic,'길드 의뢰 게시판',`진행 중 ${sideActive().length}/${QMAX}건 · 끝내면 여기서 보고한다`)+`<div class="mbody">${rows.join('')||'<p class="hint" style="padding:14px 0">남은 의뢰가 없다.</p>'}${done}</div>`;
+  }
+  if(v==='temple'){
+    const dead=S.party.map((m,i)=>[m,i]).filter(([m])=>m.dead);
+    const sick=S.party.map((m,i)=>[m,i]).filter(([m])=>!m.dead&&['poison','curse','weak'].some(k=>hasBf(m,k)));
+    return mHead(TOWN.temple.ic,'카다르 사원','"헌금만 충분하다면, 신께서는 영혼을 돌려보내 주십니다."')+`<div class="mbody">
+      <div class="msec">부활</div>
+      ${dead.map(([m,i])=>mRow(m.name,`${m.race} ${m.cls} Lv${m.lv} · HP 1로 되살아난다`,`${60*m.lv}G`,B('되살린다','rez',i,{dis:S.gold<60*m.lv,primary:1}))).join('')||'<p class="hint" style="padding:8px 0">쓰러진 동료가 없다.</p>'}
+      <div class="msec">정화</div>
+      ${sick.map(([m,i])=>mRow(m.name,m.bf.map(b=>BUFF[b.k].n).join(', ')+' 해제','15G',B('정화한다','cure',i,{dis:S.gold<15}))).join('')||'<p class="hint" style="padding:8px 0">독이나 저주에 걸린 동료가 없다.</p>'}
+    </div>`;
+  }
+  if(v==='quit') return mHead('lorc_candle-skull','타이틀로','여관에서 기록하지 않은 진행은 사라진다.')+`<div class="mbody"><p style="padding-top:12px">정말 타이틀 화면으로 돌아갈까?</p><div class="btns">${B('예, 타이틀로','title','',{primary:1})}${B('아니오','close')}</div></div>`;
+  return '';
 }
+
 function cmdHTML(){
   if(S.mode==='title') return `<div class="btns">${B('새 모험을 시작한다','new','',{wide:1,primary:1})}</div><p class="prompt">이어하기</p><div class="btns">${slotButtons('load')}</div>`;
   if(S.mode==='dead') return `<p class="prompt">어느 기록부터 다시 할까?</p><div class="btns">${slotButtons('load')}${B('타이틀로','title','',{wide:1})}</div>`;
@@ -1033,20 +1317,11 @@ function cmdHTML(){
       <p class="hint">앞의 두 명이 전열이다. 적의 근접 공격은 주로 전열이 받는다. ▲ 버튼으로 순서를 바꿀 수 있다.</p>`;
   }
   if(S.mode==='town'){
-    const v=S.townView, back=B('광장으로','town','main');
-    if(v==='inn'){ const al=living().length; return `<p class="prompt">무엇을 할까?</p><div class="btns">${B('객실에서 잔다 (HP·MP 회복, 해독)','inn','room',{sub:`${al*10}G`,wide:1})}${B('마구간에서 잔다 (MP만)','inn','stable',{sub:'무료',wide:1})}${B('모험 기록부에 기록한다','town','save',{wide:1,primary:1})}${back}</div>`; }
-    if(v==='save') return `<p class="prompt">어느 칸에 기록할까?</p><div class="btns">${slotButtons('save')}${B('여관으로','town','inn')}</div><p class="store">${UI.saving?'기록하는 중…':Store.label()}</p>`;
-    if(v==='quests') return questsHTML();
-    if(v==='shop') return `<div class="shop">${SHOP.map(it=>{
-        const bs = it.id==='potion' ? B('구입','buy','potion:0',{dis:S.gold<it.p})
-          : S.party.map((m,i)=>it.cls.includes(m.cls)?B(m.name,'buy',`${it.id}:${i}`,{dis:S.gold<it.p||m.gear.includes(it.id)||m.dead,sub:m.gear.includes(it.id)?'보유':''}):'').join('');
-        return `<div class="item"><div class="t"><span>${it.n} <span class="muted">· ${it.d}</span></span><b>${it.p}G</b></div><div class="btns">${bs}</div></div>`;
-      }).join('')}${back}</div>`;
-    if(v==='temple'){ const dead=S.party.map((m,i)=>[m,i]).filter(([m])=>m.dead);
-      return `<p class="prompt">${dead.length?'누구를 되살릴까?':'쓰러진 동료가 없다.'}</p><div class="btns">${dead.map(([m,i])=>B(`${m.name} 부활`,'rez',i,{sub:`${60*m.lv}G`,dis:S.gold<60*m.lv,wide:1})).join('')}${back}</div>`; }
-    if(v==='quit') return `<div class="btns">${B('예, 타이틀로','title','',{wide:1})}${back}</div>`;
-    const ready=S.quests.ready.length;
-    return `<p class="prompt">어디로 갈까?</p><div class="btns">${B('미궁으로 내려간다','enter','',{wide:1,primary:1})}${B('의뢰 게시판','town','quests',{sub:ready?`보고 ${ready}`:''})}${B('여관','town','inn')}${B('상점','town','shop')}${B('사원','town','temple')}${B('타이틀로','town','quit')}</div>`;
+    if(UI.anim) return `<p class="prompt muted">…걸어가는 중…</p>`;
+    const ready=S.quests.ready.length, here=TOWN[S.townView];
+    const go=(k,label,o={})=>B(label,'go',k,o);
+    return `<p class="prompt">${here?`${here.n}에 와 있다.`:'어디로 갈까?'}</p>
+      <div class="btns">${go('gate','미궁으로 내려간다',{wide:1,primary:1})}${go('quests','의뢰 게시판',{sub:ready?`보고 ${ready}`:''})}${go('inn','여관')}${go('shop','상점')}${go('temple','사원')}${B('타이틀로','quit')}</div>`;
   }
   if(S.mode==='dungeon'){
     const ch=cell(S.x,S.y);
@@ -1054,7 +1329,8 @@ function cmdHTML(){
       : ch==='>' ? B('계단: 아래층','stairs','',{primary:1}) : ch==='T' ? B('상자 열기','chest','',{primary:1}) : '<span></span>';
     const pr=S.party.find(m=>m.cls==='승려'&&!m.dead&&m.mp>=1);
     return `<div class="pad">${B('↶ 왼쪽','mv','L')}${B('▲ 전진','mv','F')}${B('↷ 오른쪽','mv','R')}${B('⟲ 뒤돌기','mv','U')}${B('▼ 후퇴','mv','B')}${ctxBtn}</div>
-      <div class="btns">${B('사나 (치유 주문)','heal','spell',{dis:!pr||!living().some(m=>m.hp<m.mhp),sub:pr?`${pr.name} MP ${pr.mp}`:''})}${B('치유 물약','heal','potion',{dis:!S.potions||!wounded(),sub:`${S.potions}개`})}</div>`;
+      <div class="btns">${B(UI.map?'지도 끄기':'지도 켜기','map','',{sub:touch?'':'M'})}${B('사나 (치유 주문)','heal','spell',{dis:!pr||!living().some(m=>m.hp<m.mhp),sub:pr?`${pr.name} MP ${pr.mp}`:''})}${B('치유 물약','heal','potion',{dis:!S.potions||!wounded(),sub:`${S.potions}개`})}</div>
+      <p class="keys">${touch?'시야 탭: 왼쪽 좌회전 · 가운데 전진 · 오른쪽 우회전 · 아래로 쓸기 뒤돌기':'W A S D 이동 · Q 뒤돌기 · M 지도 · 숫자 1–9 버튼'}</p>`;
   }
   // 전투
   const c=S.combat;
@@ -1123,20 +1399,32 @@ function trackerHTML(){
     return `<div class="q${ok?' ok':''}"><span>${q.n}</span><b>${q.main?(ok?'완료':'진행 중'):ok?'보고 가능':`${pr}/${q.need}`}</b></div>`; }).join('')}</div>`;
 }
 function render(){
-  const inDungeon = S.mode==='dungeon'||S.mode==='combat';
-  const where = {create:'모험가 길드',town:'리르가드 마을',won:'리르가드 마을',dead:'미궁 속'}[S.mode] || `지하 ${S.floor}층 · ${DIRS[S.dir]}쪽`;
+  const inView = animated();
+  const here = S.mode==='town' && UI.scene==='facade' && TOWN[UI.fac];
+  const where = S.mode==='town' ? (here ? here.n : '리르가드 광장') : ({create:'모험가 길드',won:'리르가드 마을',dead:'미궁 속'}[S.mode] || `지하 ${S.floor}층 · ${DIRS[S.dir]}쪽`);
   $('#hud').innerHTML = S.mode==='title' ? '' : `<span>장소 <b>${where}</b></span><span>금화 <b class="g">${S.gold}G</b></span><span>물약 <b>${S.potions}</b></span>`;
-  view.hidden=!inDungeon; $('#place').hidden=inDungeon; $('#mapbox').hidden=!inDungeon; $('#loc').hidden=!inDungeon;
+  view.hidden=!inView; $('#place').hidden=inView; $('#loc').hidden=!inView;
   $('#viewcap').textContent = {title:'서장',create:'등록소',town:'마을',won:'마을',dead:'종막',combat:'전투'}[S.mode] || '시야';
-  if(inDungeon){ drawView(now()); drawMap(); kick(); } else $('#place').innerHTML=placeHTML();
+  if(inView){ drawFrame(now()); kick(); } else $('#place').innerHTML=placeHTML();
   const ch=S.mode==='dungeon'?cell(S.x,S.y):'';
-  $('#loc').textContent = S.mode==='combat' ? '적과 마주쳤다.' :
-    ch==='T'?'발밑에 보물상자가 있다.':ch==='<'?'올라가는 계단 위에 서 있다.':ch==='>'?'내려가는 계단 앞에 서 있다.':`좌표 ${S.x}·${S.y}`;
+  $('#loc').textContent = S.mode==='town' ? (here ? `${here.n} 앞. ${here.d}` : '리르가드 광장. 왼쪽에 여관과 길드, 오른쪽에 상점과 지하묘지 입구, 길 끝에 사원이 보인다.')
+    : S.mode==='combat' ? '적과 마주쳤다.'
+    : ch==='T'?'발밑에 보물상자가 있다.':ch==='<'?'올라가는 계단 위에 서 있다.':ch==='>'?'내려가는 계단 앞에 서 있다.':`좌표 ${S.x}·${S.y}`;
   $('#party').innerHTML=partyHTML();
   $('#qtrack').innerHTML=trackerHTML();
   $('#cmd').innerHTML=cmdHTML();
+  // 시설 창
+  const md=$('#modal'), open=modalOpen();
+  if(open){
+    const wasOpen=!md.hidden, sc=md.querySelector('.mbody')?.scrollTop||0;
+    md.innerHTML=`<div class="mback"></div><div class="mwin win${wasOpen?'':' enter'}" role="dialog" aria-modal="true" aria-labelledby="mtitle" tabindex="-1">${modalHTML()}</div>`;
+    md.hidden=false;
+    const body=md.querySelector('.mbody'); if(body) body.scrollTop=sc;
+    if(!wasOpen) md.querySelector('.mwin').focus();
+  } else { md.hidden=true; md.innerHTML=''; }
+  document.documentElement.style.overflow = open ? 'hidden' : '';
   // 숫자키 번호는 화면에 보이는 순서대로 매긴다. 누르는 키와 표시가 항상 같다.
-  [...document.querySelectorAll('#cmd button[data-a]:not(:disabled)')].slice(0,9).forEach((b,i)=>b.insertAdjacentHTML('afterbegin',`<kbd>${i+1}</kbd>`));
+  [...document.querySelectorAll(open?'#modal .mbody button.btn[data-a]:not(:disabled)':'#cmd button[data-a]:not(:disabled)')].slice(0,9).forEach((b,i)=>b.insertAdjacentHTML('afterbegin',`<kbd>${i+1}</kbd>`));
   const lines=S.log.map(l=>`<div class="l ${l.k}">${l.t}</div>`);
   const lg=$('#log'); lg.innerHTML=lines.join(''); lg.scrollTop=lg.scrollHeight;
   $('#recent').innerHTML=lines.slice(-3).join('');
@@ -1152,7 +1440,13 @@ function dispatch(a,v){
   if(a==='cancel'){ UI.confirm=null; return render(); }
   if(S.mode==='create') return createAct(a,v);
   if(a==='mv') return move(v);
-  if(a==='town'){ S.townView=v; UI.confirm=null; if(v==='save'){ UI.slots=null; refreshSlots(); } return render(); }
+  if(a==='go') return goTo(v);
+  if(a==='close') return closeModal();
+  if(a==='quit'){ S.townView='quit'; UI.confirm=null; return render(); }
+  if(a==='tab'){ UI.shopTab=v; return render(); }
+  if(a==='sell') return sell(v);
+  if(a==='cure') return cure(+v);
+  if(a==='map') return toggleMap();
   if(a==='accept') return acceptQuest(v);
   if(a==='claim') return claimQuest(v);
   if(a==='enter') return enterDungeon();
@@ -1164,7 +1458,10 @@ function dispatch(a,v){
   if(a==='heal') return fieldHeal(v);
   if(S.mode==='combat') return combatCmd(a,v);
 }
-document.addEventListener('click',e=>{ const b=e.target.closest('button[data-a]'); if(b&&!b.disabled) dispatch(b.dataset.a,b.dataset.v); });
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('mback')) return dispatch('close','');
+  const b=e.target.closest('button[data-a]'); if(b&&!b.disabled) dispatch(b.dataset.a,b.dataset.v);
+});
 document.addEventListener('input',e=>{
   if(e.target.id!=='cname'||!S.draft) return;
   S.draft.name=e.target.value; const p=draftProblem();
@@ -1176,11 +1473,12 @@ document.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   const mv={w:'F',arrowup:'F',s:'B',arrowdown:'B',x:'B',a:'L',arrowleft:'L',d:'R',arrowright:'R',q:'U'}[k];
   if(mv && S.mode==='dungeon'){ e.preventDefault(); return dispatch('mv',mv); }
-  if(/^[1-9]$/.test(k)){ const b=[...document.querySelectorAll('#cmd button[data-a]:not(:disabled)')][+k-1]; if(b){ e.preventDefault(); b.click(); } }
+  if(k==='m' && S.mode==='dungeon'){ e.preventDefault(); return dispatch('map',''); }
+  if(/^[1-9]$/.test(k)){ const b=[...document.querySelectorAll(modalOpen()?'#modal .mbody button.btn[data-a]:not(:disabled)':'#cmd button[data-a]:not(:disabled)')][+k-1]; if(b){ e.preventDefault(); b.click(); } }
+  if(k==='escape' && modalOpen()) return dispatch('close','');
   if(k==='escape' && S.mode==='combat') dispatch('back','');
 });
 // 터치: 시야를 탭하면 이동 (왼쪽 1/3 좌회전, 가운데 전진, 오른쪽 1/3 우회전), 아래로 쓸면 뒤돌기
-if(touch) $('#keys').innerHTML='시야를 탭해서 이동<br>왼쪽 ‹ 좌회전 · 가운데 전진 · 오른쪽 › 우회전<br>아래로 쓸어내리기: 뒤돌기';
 let tStart=null;
 view.addEventListener('pointerdown',e=>{ tStart={x:e.clientX,y:e.clientY}; });
 view.addEventListener('pointerup',e=>{
@@ -1198,11 +1496,12 @@ function start(data){
   data = data ?? window.claude?.hot?.data ?? {};
   if(data.S){
     S=data.S; normalize();
+    if(S.mode==='town' && TOWN[S.townView]){ UI.scene='facade'; UI.fac=S.townView; }
     if(S.mode==='combat' && S.combat){ S.combat.cmds=[]; S.combat.cur=-1; S.combat.sub=null; busy=false; nextActor(); }
     else render();
-    if(['title','dead'].includes(S.mode)||S.townView==='save') refreshSlots();
+    if(['title','dead'].includes(S.mode)||S.townView==='inn') refreshSlots();
   } else toTitle();
-  Store.init().then(()=>{ if(Store.kind==='cloud' && (S.mode==='title'||S.mode==='dead'||S.townView==='save')){ UI.slots=null; render(); refreshSlots(); } });
+  Store.init().then(()=>{ if(Store.kind==='cloud' && (S.mode==='title'||S.mode==='dead'||S.townView==='inn')){ UI.slots=null; render(); refreshSlots(); } });
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 document.fonts?.ready?.then(()=>{ if(S) render(); });
