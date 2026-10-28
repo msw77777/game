@@ -1,0 +1,104 @@
+{
+  "party": {
+    "전사": {
+      "src": "party/warrior.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "도적": {
+      "src": "party/thief.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "승려": {
+      "src": "party/priest.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "마법사": {
+      "src": "party/mage.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    }
+  },
+  "monsters": {
+    "slime": {
+      "src": "monsters/slime.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "goblin": {
+      "src": "monsters/goblin.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "imp": {
+      "src": "monsters/imp.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "orc_warrior": {
+      "src": "monsters/orc_warrior.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "skeleton": {
+      "src": "monsters/skeleton.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "zombie": {
+      "src": "monsters/zombie.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "orc_shaman": {
+      "src": "monsters/orc_shaman.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "necromancer": {
+      "src": "monsters/necromancer.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "ogre": {
+      "src": "monsters/ogre.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "chort": {
+      "src": "monsters/chort.png",
+      "frames": 4,
+      "fps": 6,
+      "pixel": true
+    },
+    "boss": {
+      "src": "monsters/boss.png",
+      "frames": 3,
+      "fps": 5,
+      "pixel": true
+    }
+  },
+  "props": {
+    "chest": {
+      "src": "props/chest.png",
+      "frames": 1,
+      "fps": 6,
+      "pixel": true
+    }
+  }
+}

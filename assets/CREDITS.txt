@@ -1,0 +1,10 @@
+리르가드의 미궁 — 그림 출처
+
+[도트 캐릭터·몬스터·상자]  assets/party, assets/monsters, assets/props
+  16x16 DungeonTileset II — 0x72 (https://0x72.itch.io/dungeontileset-ii)
+  라이선스: CC0 1.0 (퍼블릭 도메인, 상업적 이용 가능, 출처 표기 의무 없음)
+  원본 시트 사본 출처: KAPLAY 예제 저장소 (github.com/kaplayjs/kaplay, examples/sprites/dungeon.png)
+
+[아이콘: 마을 간판, 계단, 직업 아이콘 예비용 등]  index.html 안에 포함
+  game-icons.net — Lorc, Delapouite, Skoll, DarkZaitzev
+  라이선스: CC BY 3.0 (출처 표기 필요 — 게임 화면 하단에 표기됨)

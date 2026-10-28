@@ -1,0 +1,162 @@
+<title>리르가드 아트 가이드</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Song+Myung&family=UnifrakturMaguntia&display=swap">
+<style>
+/* Layout: 게임과 같은 고딕 양피지 톤의 한 단 문서. 표·코드는 각자 가로 스크롤 */
+:root{--bg:#0b090a;--win:#151012;--line:#d9caa9;--dim:#8f7f6c;--blood:#a3241d;--gold:#d9a647;--code:#1d1618;
+  --f-black:'UnifrakturMaguntia','Old English Text MT',serif;--f-display:'Song Myung','Nanum Myeongjo',serif;--f-body:'Gowun Batang','Nanum Myeongjo',serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--line);font:16px/1.75 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:860px;margin:0 auto;padding-block:28px 48px;display:grid;gap:30px}
+header{border-bottom:1px solid #3a2e2a;padding-bottom:16px}
+.bl{font:400 24px/1 var(--f-black);color:var(--blood)}
+h1{font:400 clamp(28px,5vw,40px)/1.15 var(--f-display);margin:6px 0 8px;text-wrap:balance}
+h2{font:400 24px/1.3 var(--f-display);color:var(--gold);margin:0 0 10px;text-wrap:balance}
+h3{font:700 16px/1.4 var(--f-body);margin:18px 0 6px}
+p,li{max-width:66ch} p{margin:0 0 10px}
+.lead{color:var(--dim)}
+code{font:14px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border:1px solid #3a2e2a}
+pre{background:var(--code);border:1px solid #3a2e2a;padding:14px;overflow-x:auto;font:14px/1.6 ui-monospace,Menlo,Consolas,monospace;margin:0 0 10px}
+pre code{background:none;border:0;padding:0}
+.tbl{overflow-x:auto;border:1px solid #3a2e2a}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #2c2224;vertical-align:middle}
+th{font:13px var(--f-display);letter-spacing:.15em;color:var(--dim);font-weight:400}
+td img{image-rendering:pixelated;display:block;max-width:none}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+ol,ul{padding-left:22px;margin:0 0 10px}
+.note{border-left:3px solid var(--gold);padding:8px 14px;background:rgba(217,166,71,.06)}
+.warn{border-left-color:var(--blood);background:rgba(163,36,29,.08)}
+a{color:var(--gold)}
+</style>
+<main>
+<header>
+  <div class="bl">The Catacombs of Lirgard</div>
+  <h1>아트 교체 가이드</h1>
+  <p class="lead">「리르가드의 미궁」에 쓰이는 그림 파일의 위치와 규칙을 정리한 문서다. 그림 파일만 같은 이름으로 바꾸면 게임 코드를 고치지 않아도 새 그림이 나온다.</p>
+</header>
+
+<section>
+<h2>1. 폴더 구조</h2>
+<pre><code>lirgard/
+├─ index.html            게임 본체
+└─ assets/
+   ├─ manifest.json      그림 목록 (파일 경로 · 프레임 수 · 속도)
+   ├─ CREDITS.txt        그림 출처와 라이선스
+   ├─ party/             파티 초상 (직업별)
+   │   ├─ warrior.png    전사
+   │   ├─ thief.png      도적
+   │   ├─ priest.png     승려
+   │   └─ mage.png       마법사
+   ├─ monsters/          전투에 나오는 몬스터 (정면)
+   │   ├─ slime.png  goblin.png  imp.png               ← 지하 1층
+   │   ├─ orc_warrior.png  skeleton.png  zombie.png    ← 지하 2층
+   │   ├─ orc_shaman.png  necromancer.png  ogre.png  chort.png ← 지하 3층
+   │   └─ boss.png                                     ← 마도왕 베르가스
+   └─ props/
+       └─ chest.png      미궁 바닥의 보물상자</code></pre>
+</section>
+
+<section>
+<h2>2. 지금 들어 있는 그림</h2>
+<p>모두 0x72의 「16x16 DungeonTileset II」에서 잘라 낸 도트 그림이다 (CC0, 자유 이용).</p>
+<div class="tbl"><table>
+<thead><tr><th>파일</th><th>게임 속 쓰임</th><th>manifest 위치</th><th>크기</th><th>현재 그림</th></tr></thead>
+<tbody>
+<tr><td><code>assets/party/warrior.png</code></td><td>전사 (파티)</td><td><code>party</code> → <code>전사</code></td><td class="num">16×28px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABUCAYAAADUKzhSAAAC6klEQVR4nO3dv0ocURTH8VF8hJBWXLBKmoD2KRRShTxESJ4gRZ4gha1FlDyChYiFEN/BJvWCbeqQNikGliPOIffm/vf3/VTrODv37oXD+TGzOzNNAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACgF1veP1ar1Z8cA6zXa3eM3HLN2Wo1/5rjKttuPQGgJQoA0nbsH7YF37x8vviGZ69/Rw1wcFq2rYfM2Rpl/m+mabgI6kmJpqXnTweANAoA0rbcFvzj5+IbUqLRwemvzevSccIzyvzzRdCyc/Z4n6W3+dMBII0CgLQHLSXkQkxKm27Vjq1R5u/FuREjnI3Tvc2fDgBpFACkBbWRlLMr3tmkEDVjRsj8e7uo1EOEC4k9dqze5k8HgDQKANKiI9C764ssA5/s7S5u339xuHldok3XpBbhvLOIPUdoOgCkUQCQtvPvXcLcnX+P2v8oYB+vdaa08poRLpeQCBESFWKjYOw6h+zvrf9Xb39ne671pwNAGgUAadkikPXqw/F/v/f2y/vF7SWihUWEm5VeZ0+r9acDQBoFAGlFIpBlW5uNRt72o8/fNq+9OFQaEW5WIsKFqLn+dABIowAgrXgEGh0RbtbD2aES608HgDQKANKIQE/ciBGuJjoApFEAkFY8AnlnJLztCm0X/aADQBoFAGlFIlDs91Ks/auzjDNJR4Rrq/T60wEgjQKAtGwRKOX7J/bXSTYCtboVIRGurZrrTweANAoA0qIjUEp78nxKiE+5EOFmrSJcq/WnA0AaBQBp0REopVV5bAu7zH70h4hwj9WMcL2tPx0A0igASJP7RRgR7rGaEa639acDQBoFAGnZLoTdR15A2X37cfM65DZ9mPUWIUZHB4A0CgDSks4C3UdeNPHuNhx7nBSjRDi7VnYs734+Key9gOxY09XZ4mNPU/S2/nQASKMAIC36SfFWbFts9cCFkMeDpkS42OOEaPV0e0/K5yqxbrmOSQeANAoA0v4CUmWdXQkgNLkAAAAASUVORK5CYII=" alt="전사 (파티) 현재 그림" style="height:84px"></td></tr><tr><td><code>assets/party/thief.png</code></td><td>도적 (파티)</td><td><code>party</code> → <code>도적</code></td><td class="num">16×28px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABUCAYAAADUKzhSAAADS0lEQVR4nO3dP2sUQRjH8YlaWJ1t1EJYMCAoCKYSrC0SCBYWWsaXIBZytWAriG/BIsVVKXwDqVQEBUHhwCJoa1SwES3Ey7O4DzezO7O7zz3fT7V72T+TCQ/PL3ObXAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDWZM7VVX9/rc9n8/X/j9c1+XcXKyPH/07MfQAgCFRAHBNjUBSTCTocm4u1sdvncUISgeAaxQAXDulfeH8rSvHO7OQFA+6nJuLNoaY+3Y5F39ZiUN0ALhGAcA1NQJJtUggKfHm++uTi+0zF642nlqF5nNjpLZFK3HISmyIYSVC0wHgGgUA12oRqNZWROu59Ohi48mTzebXQ/ix9MbngnZuhGn7KBLTXmWEk2ScKx3hVjYOSSOI0HQAuEYBwLWoVSArVinCWVlFUa9pZP7pAHCNAoBr2SLQ/p0Xja9vPb+59HjtGO34qqoSR2fbmFdRrKMDwDUKAK4Ntgp04/6O2PuZdPzh7G328YwhwllcRckVh4aafzoAXKMA4Fq2CFSPNFJzvJlsLo892vGHs6RTixhbhPMm1/zTAeAaBQDX1AhU++1+GrMikRZpxsZ6hBvDKlYXQ80/HQCuUQBwrdc3wo5enl5sa391JX399Kb1vbxFuFSlV7GszD8dAK5RAHCt1wj0bPvu8c528zE79x4utsf22G2fES6V9VWsGCXmnw4A1ygAuFY8Aj1e3y19i970GeGsrKL0qcT80wHgGgUA19QIpH1mljerFOHGvIqlKT3/dAC4RgHAtVoEkrFHW2349fRb0g0ehCdtxtXKKsW2XI8c1yKEXDkpvIpl5WdBB4BrFABcU1eB3k8/Nr5++/q1YoMJIYQPn79kuY6VCGclKsSwGKHpAHCNAoBr+meECbK1vds6aryQjExaTNo7eLXY1lpkONCGupz2/Iwk73t5f9L+ZkJtTqbtI1xMbCgdITbOrsvd1v8CUYvQY5t/OgBcowDgWqfHoWWbky1yL/HDF7TrdCGvo620yNaZLcIlSo1tmtQ4oUXZmsQ4EROhtTEMNf90ALhGAcC1qLihtbAun2De5TqpYt5siolMMXJ9L2N7g6z0c0FDzT8dAK5RAHDtD5CX3sEDDSQcAAAAAElFTkSuQmCC" alt="도적 (파티) 현재 그림" style="height:84px"></td></tr><tr><td><code>assets/party/priest.png</code></td><td>승려 (파티)</td><td><code>party</code> → <code>승려</code></td><td class="num">16×28px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABUCAYAAADUKzhSAAADI0lEQVR4nO3dMWgUQRTG8UkIghCCitjEQg6VBLTy2oBiYycBIWJvZyVYiaWVbTpLRSIIwc5OIW1stEjAcDaRayxEglqplXvvcB87czOzO8v7/6rh2L19O2R4H3u7G+cAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAApDQXs/NgMPiTqpB/RqNRVE1AiPmuCwC6xAKAaQuhO8jYs3tvceYDL66dqP18ZcPVxqoc0YgI160S5p8OANNYADDNq11osUeLMTmsbBxW45iYkT/CHdZ+rkl1Lqlo9WjHCq2/zfn3qY0OANNYADBNvQrUVew52vmW5Fhay859LvsvzzZuExqTpK6uwsnzCq2/zb+l6Ton56LFIToATGMBwLSptiBb1ZtLZxp3Pn31RzVeWnuQpKDvO0+q8an7H6r6ZG0+Vyp86j/36NisZapkhBtuHtVuk+rKSclX4XyiWo76tQit1U8HgGksAJgWfC+QJGPPnfertdu8uLLX+D1y391EscGHbJepIpxzkwhXwg92obQIFxp7ZAT9+k7bY3KsHPPvgw4A01gAMC0qAvVdmxHOR2kRIvet3bnnf6RcRZToADCNBQDTpiKQbHk3nAv68cWnVWnkvhdn/pa4+vuotAhXMu4FAmqwAGBa1FWg3+5pNZ53d6OL6VIJEa7v+hih6QAwjQUA06YiUMz9JzIOXd86WbvN29u3qvG1rVe128jjDjebb4GOUVqE62OEiFHC/NMBYBoLAKYtxDy5s35wvBpvn/9ZjZeGv2q3v3nwXGyjVDSeDEPjEBGuW32cfzoATGMBwLS5mNfrrT6+kLIW55xzew8/NW4j21mOCCc/D/VsPK793OfpqlQPksdEiNfLn6tx7ppLmH86AExjAcC04LdD5449Me/MCUWE+19ohOj7/NMBYBoLAKapcSN37JFiIpBGa81ttt3Qd+mE6ipCSKH/UKO0+acDwDQWAExT3w69vH65/Wqcc1+2P1bj0AjRVc0an3MpuX6NPC+ptPp95p8OANNYADBNfShea3Ml62PNEvW3jw4A01gAMO0v/8iwOZSnPf0AAAAASUVORK5CYII=" alt="승려 (파티) 현재 그림" style="height:84px"></td></tr><tr><td><code>assets/party/mage.png</code></td><td>마법사 (파티)</td><td><code>party</code> → <code>마법사</code></td><td class="num">16×28px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABUCAYAAADUKzhSAAADeElEQVR4nO3dvWsUQRjH8fOls7CxsJNEIWBrkcPCQiSkSGN5lWWMlkIEIXAQEAxYWFzAv+BKG0GLkOIKOQvbgxQWdhY2Fpai3exzuA8348zszuT5fqrNsdl7ZsPw/Jx9cTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACluNB3AV24cf3On7bPv33/YmL80F3suwCgT0wAmHbZZ6fzFCHu3jtqfpjtu3HVOBbEowPANCYATPOKQNJ5ihDaWKQSxlV7BC25fjoATGMCwLTgCCT5RAhNl+1v6btEnbL+pbFIhUWj2iNoafXTAWAaEwCmeUWgqAgh/L5/tflhvFtUtNDIcZVWfy2rWJqYCC3FjJEOANOYADDNq3XICxnBUSfQ5/Gu207VvmuvXwody6fZfuvnfUWj0Pol7e8Sc87pADCNCQDTgtug1sJCY8Ol058r95HtO3ccqr1+H3KMMjZIJcS2VBFU0sZFB4BpTACYVtwqkCbmX/rU76+vVbgcEVTS4igdAKYxAWCa2uK0p3hKo7Xp2uvX1LKKleOCVyoy5tEBYBoTAKYFrwK9nzZt8fbwgdt+PXrotp9N37Ue5+OrJyu/a/v5cevn62tbbjumHcv6pQ9vJiGHDDaZ/3LbJa8CaUJXh2qJoHQAmMYEgGlRD8VrZFyRjh/f+u/fzXGPioxwMgLliHATZVwaLUJotzcvmQV9VTBZm/Z3kZ+XHKHpADCNCQDTskSg2pUQ4WqJEDl0ef7pADCNCQDTkkWgpbYr2nGop8MrrcdcX9vq/TV6tSghwtWCDgDTmAAwLcsqkLYK4WM7YR0hiHD96uv80wFgGhMApgW/HXpndCRuzb3m9nmx98Ntyws0NSLC/XvMLiNcl+efDgDTmAAwLWoVSD55dHjWbB8MTtx2TBxKdf+JFuE2xzfdPgcbX902ES6tks8/HQCmMQFgWpYLYYdnorUlikO55ag5xy3EO6PmofgSIkQqfZ1/OgBMYwLAtOxPhMnWNh3m/rZ28omqzfHblfuXVrOk1V9yhCv5/NMBYBoTAKZ5RSD11XyB/0nB4NHqXRbzk9U7eUhV82Kju1Usr1cgetT/8lTco9XTKlwt558OANOYADAteBXI69V8isW8/Z02krzQk0pMzYO9sN9NFeFCa9beFxRDHlPewxO6IlTy+acDwDQmAEz7C2vX6fffT+f6AAAAAElFTkSuQmCC" alt="마법사 (파티) 현재 그림" style="height:84px"></td></tr><tr><td><code>assets/monsters/slime.png</code></td><td>늪 슬라임 · 1층</td><td><code>monsters</code> → <code>slime</code></td><td class="num">16×16px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAABHTnUeAAACZUlEQVR4nO2cMUpDQRCGExH0EiKk8QAWXiGVYCN4AsFCbKxSW6VL5ymEFOIVLDyAzQPxElppI8kEsmTW3Zfdzf99VVh9L7OTN/w/s7tvOICmGI1GP33ev+u6YZ/3r4290gEAlIQCAGn2SwcAm7G25/j8ejF+efOc/bum48HiuxTsEAoA0lAAII2cBdrVLsr87WLt+PnpU+S1s0wRrae2/KMAIA0FANJEW6DaJMyDQhflfRKwLi9H/782EzXnHwUAaSgAkMZlgWqWsFy00kXZVUrlHwUAaSgAkCbbQljrFqLmLoqHk4fbwF82599eW2oupfKPAoA0FABIk80CtW4hWuHw7GDtuM3hvcn5dPzpGF/apLmxQ93VXVKsLYACgDQUAEgjtx06RCtdFHv/+UrMy3FrbzzYLlwpO1oq/ygASEMBgDTZLFArFmKXuiixuQotOG7T9tSWfxQApKEAQJqgBQqd/NqmhA0ms+xbo1vsoti5p5zI88TW9xb02vKPAoA0FABIsyJ3sfIa270JWaDY+3hkuo/D+yndqlzWovWXEqTQx3OCAoA0FABIk2SBYsm14BWStr7jz0WszSg1rxQ7VNtvEZoLCgDSUAAgzdAjVbHWpYZD1paa4/fYuRriT+m81RC/xc4FBQBpKACQZmUvkH3t4cf8cePFIamy7wKaOv4/djwXtcWfayEyJf6v1+/FZ/sM2NhyLZbVkH8UAKShAECaYejNzx5CW6M9r0NMwbNd1jOXbcYfitmz1Tk0l77j98RsiX2WSuWfLhDAHxQASONaCIP+yHXaa5vs0l4sFACkoQBAml+YqI5utCzXtgAAAABJRU5ErkJggg==" alt="늪 슬라임 · 1층 현재 그림" style="height:48px"></td></tr><tr><td><code>assets/monsters/goblin.png</code></td><td>고블린 · 1층</td><td><code>monsters</code> → <code>goblin</code></td><td class="num">16×16px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAABHTnUeAAABfklEQVR4nO3bMUoEMRQG4FEsBQ9gISxYiSCivbWdVxC8haW3ELyCnbUHEBHsFyw8gAcQLYQ14M66ITOTGd73VVMkS3jweD9Z0jQAAAAAAAAAAAAAAAAATMNG7obZbPbVx0GWmc/n2eeDHJu1DwA1aQBC2yrZvLN3tPjePv4sPUvTNE3zfv/aye+0EeHqGlv9TQBC0wCEVhSBpk6EW63vCDeG+psAhKYBCK2XCNQ2hnYvDrPWs9oYIsTUmQCEpgEIbdS3QOmNx5B/KolwdQ1ZfxOA0DQAoXUWgR5v7hbfJ89XLauW31SktxlPD7eL7/2D0y6OVo0IV9c69TcBCE0DEFovt0BpjDm7vsxaX4sI99eQEa5W/U0AQtMAhNZZBDo5/x1bH28v/65Px1bb3lovqkS4H7Ui3JD1NwEITQMQWlEESuNKOkZTaYxJbxXW2TskEa6uWvU3AQhNAxBa0Yhe54F22xgq2Vsi91F5W4TL3duVqT+KH1v9TQBC0wCE9g3PQbxoQem94gAAAABJRU5ErkJggg==" alt="고블린 · 1층 현재 그림" style="height:48px"></td></tr><tr><td><code>assets/monsters/imp.png</code></td><td>임프 · 1층</td><td><code>monsters</code> → <code>imp</code></td><td class="num">16×16px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAABHTnUeAAABs0lEQVR4nO3bMUoDQRTG8Sg2Ym+ZYi2TUksbq4AH8ATewQt4GA8gWAq2ltu6gqVtsNZCiBPcYXecefM2fv9fFZaZuDx4vI84M5sBAAAAAAAAAAAAAAAA+A/2LL60aZrPvudd1w3+vZy9QKp97xcAPNEAkHZQ6ovC6HJ+dLp5/vTxbLrXAhHOV836MwEgjQaAtOQIFBsx1nutEeHy9+bwqj8TANJoAEjL+hXoYXm8+bxq35PWh8bsLYUIV3ZvqqnVnwkAaTQApBX7R9h2vHkLPvfHntjeVfszdq1/eSDC+ZpC/ZkAkEYDQFqxCBQ6ubvvff5ydTm8fnFm8UqDiHC+vOrPBIA0GgDSTCLQriPCffM6wl2z/kwASKMBIM0kAl0vL3qf3ywOk9bjb3YxwnlhAkAaDQBpJhEoFnXGrH9s16VfJxkRzlfN+jMBII0GgLSsCHT7Ou99PuYmUXjzaJv/uRQinK+a9WcCQBoNAGlZESiMOrFIE54nCW8kjdlrjQj3e33NCDeF+jMBII0GgLSs465jLlnHjtTm7M2RejE8FuFS95ZS82L7FN7fuv5MAEijASDtC/RW5vN7t5N0AAAAAElFTkSuQmCC" alt="임프 · 1층 현재 그림" style="height:48px"></td></tr><tr><td><code>assets/monsters/orc_warrior.png</code></td><td>오크 전사 · 2층</td><td><code>monsters</code> → <code>orc_warrior</code></td><td class="num">16×20px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAA8CAYAAAAwjLVlAAACE0lEQVR4nO3dMUoDQRTG8UQtA55AhICFSECD9tYeQ/AW3sTOC9hZewARwdoFAzmAYCWIdnEku2YmM7MzL9//V8XFHR4Lj/cxu8kOBgAAAAAAAAAAAAAAAAA2wTD0hPF4/J2jkFWapgmuFVhlq3QBQEk0AKTtxJy8u3+8+DyafsXWsmR+95J8TSJcWbVdfyYApNEAkBYVgawjwvnLEeFquP5MAEijASBNOgJZV0OEsI4JAGk0AKRliUAfT9utx33GdNe5fbJeP/wxASCNBoC0LBHo/e259fhoOln73D5Zr9+6PiMoEwDSaABISxaBcu9+uM/A5HguxXr9Luu7WH1GUCYApNEAkJYsAj3e3yw+n15cdfzX6hHsPt/irnlwdLZuaV6s1++yuItVKoIyASCNBoC0LDfC3NF/fn259rmlWKzf+i5WqQjKBIA0GgDSkkWg0Kjgs477jaTcN4+s179Ju1h9RlAmAKTRAJAWFYFOZq+/f8xiS1k2T7+kBIu7WKUiKBMA0mgASIuKQJO9z1R1tHrIEKtcmxThLO5i1XD9mQCQRgNAmvRPIxLh/pc7wtVw/ZkAkEYDQFpUBLodHrYeD/1Wkfv8yV9h66ipIUJYxwSANBoA0pLtArmxx+emSde7rkLXiUGEK6uG688EgDQaANKCI0ZXdAmNK6nWCeXzmtGYCBe6Tijrr0mt7fozASCNBoC0H70L/9LFzggLAAAAAElFTkSuQmCC" alt="오크 전사 · 2층 현재 그림" style="height:60px"></td></tr><tr><td><code>assets/monsters/skeleton.png</code></td><td>해골 병사 · 2층</td><td><code>monsters</code> → <code>skeleton</code></td><td class="num">16×16px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAABHTnUeAAAB3ElEQVR4nO3cO07DQBSF4QFlJZZooI7EAuhZBKtgBawii6BnAUjUoYnkrUCDwkTySHfsO6+c/6tSxGEsfHWOJnZCAAAAAAAAwPW7sbxpmqaf0gtZMs+zaX3AWretFwC0xABA2i73gPfD2/n1/eOT62JCCOHuYe/+mWir5wpNAkAaAwBp2RVoRD1HsJreKjQJAGkMAKS5VaBU9JyOX6uPLaG3CLagwpVDAkAaAwBpErtA12TECrfl75au0CQApDEAkOZWgeJoTomjKo62+Njnl1evJWUZZRcLvkgASGMAIM2tAll2JFJ14vLYNhVodKNXuFYVmgSANAYA0vgi7M/ou1ija1WhSQBIYwAgLbsCXUb8ctyk6kTP9WD0XSwq3DokAKQxAJBmqkCWJ4Pip5bSdeI/XhWeNqpplArXW4UmASCNAYC0TV+EbXlYOz62Zh3qLYIVpP6/qevHUqEtn29BAkAaAwBp2dGRii3Lbbex1C24peuQpbalzsVy23CJ9edWTa8KV/NcWl0/JACkMQCQtmkXKI7a3KeKerj/JPc3duKY/v78OL+uuf4tvwt0Oi6/v4dzaXX9kACQxgBAmtsuUCz3iw/LsV5K/9JyD7tAXlqdS83rhwSANAYA0n4BREvMuPH5vdkAAAAASUVORK5CYII=" alt="해골 병사 · 2층 현재 그림" style="height:48px"></td></tr><tr><td><code>assets/monsters/zombie.png</code></td><td>구울 · 2층</td><td><code>monsters</code> → <code>zombie</code></td><td class="num">16×16px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAwCAYAAABHTnUeAAACEElEQVR4nO3dMUoDQRTG8UQsvIPYpLMQwVPYBTv7lNZCQg6gYJ0yfToJWHgJBbFIIaQRz6GNbF6RcXczM3mzfv9ftYZJnB14vM/JMvZ7iQwGg++6Mev1ul833o4BcjvwngDgiQKAtMOYN9sYc/t8snXM08vR5odprxq/nN9VLw9Hk5hpJEGE8+W1/nQASKMAIC0qAoXY2LOaflTXNvaUgAj395jcSlh/OgCkUQCQ1joChVrnw+Xn1vGlxZ4miHC+9rn+dABIowAgLWoX6P7muro+vTiPnsw+EOF8lbb+dABIowAgLdkXYaGdhFALK2HngQjnq4T1pwNAGgUAaVmeBeoiIpwvr/WnA0AaBQBpySLQ8dXZzuO/Ht9TTUNWFyNcCegAkEYBQBq7QL+IcL681p8OAGkUAKQRgf4JItxu6ACQRgFAWusIZM+NGc8W1aO59rkUa/X6tvV123Y5ThBe6ACQRgFAWpZdoGaP5i5y/OpaRDhfpa0/HQDSKABISxaBmsSeUDsrDRHO1z7Xnw4AaRQApEWdDt32zBnb2pbzzfVwNKk+M3c7Dp2rE2q7TWKb/cwc82/yzy8sey9t52/t81681p8OAGkUAKS1bnG23didh/Gs3V/loffmbrs5ztKxbTrVveSec0gX7yVmznQASKMAIC0qAoWEWk/Me2O03UVJJVVsKEEX74UIBNSgACDtB4mFMbL1gVJoAAAAAElFTkSuQmCC" alt="구울 · 2층 현재 그림" style="height:48px"></td></tr><tr><td><code>assets/monsters/orc_shaman.png</code></td><td>오크 주술사 · 3층</td><td><code>monsters</code> → <code>orc_shaman</code></td><td class="num">16×20px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAA8CAYAAAAwjLVlAAAClklEQVR4nO3dP0scQRjH8TsTrJS8AgkcXKUH5tDOQuxi51sQLK7xFaS8V5AUFgd5C9clnVxhKSGgnXgQxRcg2iiIdrtT7GRnbv77fD/VuMwODwvD82P2cDsdAAAAAAAAAAAAAAAAAAAAAChS1/aGXq/3GqKQNvP53LpWoM1S6gKAlNgAEO2jy82fPm9W45XhS+v8k6sPrXNG/Xqdu+nFQnX9DxEurdyePx0AorEBIJpTBHKhRh2TaBQCEc5ciAiXw/OnA0A0NgBECxKBHv80t6rRsDn2qG1Ld29M2hpW66EuwsWsP4cIkYqvCE0HgGhsAIgWJALd//vbeH1lOKjGagszuTcmXQ2jg7p+XYS7zzg2qHI4hdOJGaHpABCNDQDRvEWg0Kcf6gugEC9lbOvXRTid0PWrSj+Fixmh6QAQjQ0A0bxFoPNfk2q8tX+kmdUeG9SXO+qa/fXtRUszUnr9qhJP4VJFaDoARGMDQLQgL8LU1r/77XDhe1Mpsf7ST+FSRVA6AERjA0A0bxHINiqYrKP+HDf0y6PS639Pp1gxIygdAKKxASCaUwT6cnNd/3HTPGdyeVqNjzb2rK73p/Hars5s/LMaf/+6U42Pf5+1Xk9Vf4mnWKkiKB0AorEBIJpTBBqsPXuZb7uOLyYRrjOuhxe3y41TdNdjKvEUK4cITQeAaGwAiBb8XyOqJyQh5rswiV5qPYO19nVi1p9DhHCRQ4SmA0A0NgBEc4pAutOP2etD670/lN+W7HZXNbOeFikriphRRyeHCBFa6AhNB4BobACI5u0USI09Ji9NdB96sF3HhUuEU+Uc4XI+hcshQtMBIBobAKJ5+1K8bVzxtY4tk29suUQ423Vslf6NsNyePx0AorEBINobqkNg7giANSAAAAAASUVORK5CYII=" alt="오크 주술사 · 3층 현재 그림" style="height:60px"></td></tr><tr><td><code>assets/monsters/necromancer.png</code></td><td>강령술사 · 3층·보스방</td><td><code>monsters</code> → <code>necromancer</code></td><td class="num">16×20px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAA8CAYAAAAwjLVlAAACIklEQVR4nO3cMUpDQRDG8RdJIdh6gvQ2ait4AQ/hIXICS2/hFbyAkFYrrXMCW0FBiI3oCi7Zl+zs7Lzv/6tE4nPeI8N8TMgOAwAAAAAAAAAAADBBM+8CrCwWi413Dan1ej3ZZx3ZgXcBgCcaANLm3gW0cHF07vJ/V2+PO/8tEa4NJgCk0QCQlo1AjOB+RIxwUTABII0GgLSiLZDCCL78fK9+zVX1K8YRJUIzASCNBoA0iQ/Cxrqdve78t8vNccVKyvUc4XqO0EwASKMBIK1aBOp5BKuJGOG8MAEgjQaANJMtUPQR/Px0/+/vT86utr7+7vTapKap84rQTABIowEgjQ/CJih6hGsZoZkAkEYDQJpJBIo+gnN1lrx+OfhvsVCOCQBpNACksQX69jA//Pl5+fkbY0o2EunmIb3O8FGntrGiR7iWEZoJAGk0AKSZRKDeRnD6zaCSbyeVxKFs7HEypQjXEhMA0mgASKsWgXobwek5MPucUZO7r1zsSeOW13GO0SPckGxySt4/6eZn7PuHCQBpNACkmWyBIo7gqRob4XrQ8v3DBIA0GgDS/kQgixN9vbYovZ1OXKKHmsc+/5Kax34QmbKOcEwASKMBIC27Bap1om963ovX5mGfe/GqP+LztzgF2rp+JgCk0QCQlo1AFkfVlVzT4kToWvfSsv6Iz9+i5n2uz9GIwBY0AKRlI9DNx0vLOkxFvBdqboMJAGk0AKR9ASjo3vMRIxDKAAAAAElFTkSuQmCC" alt="강령술사 · 3층·보스방 현재 그림" style="height:60px"></td></tr><tr><td><code>assets/monsters/ogre.png</code></td><td>오우거 · 3층</td><td><code>monsters</code> → <code>ogre</code></td><td class="num">32×32px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYAAAABgCAYAAAAU9KWJAAAFAUlEQVR4nO3dwYocRRgH8FkVvUR8ADHCgidZkBDve/bmKwge8wYe9w08BnyFvXneBwghkPtCXHyAEC8Ksh4CM9+ardnu6a6u6vl+v1OzmczUfD1QfP+urt5sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAw520HsA+p6enty0+9/r6uuu6LEX94bh91HoAALRhAgBI6pPWA/i/GDt88fV3278/evLvcoO43GzHkC2OUP9+iODaylB/HQBAUiYAgKS6i4AgMxFcW9nqrwMASMoEAJCUCQAgKRMAQFImAICkqq8CilfV4xXtKTdZ/PXy46nDYgL1h+OgAwBIygQAkFT1CGhI7HN+8vn2+Or23YPvGW/K+PPy9b2v+fLHs+GD3PM+a1cjglP/tkRww4mg99MBACRlAgBIarYIaEirFffWePvm1VwfXVXpe61FjQiO4URwbYmg99MBACRlAgBIarYIaMnY5+rit+3x05c/F141bvvWOM4Xvz/fHn/z7fej3qeVJSO4hesvguNBIujD6AAAkjIBACRVZRVQSbwyPvaq953XX+wOY1xw/stPo94ziu+zRrXbXvXfTwTXlgj6MDoAgKRMAABJVV8FNJfYIpVMupni4uGX9Kx2BKf++4ng2hJBH0YHAJCUCQAgqUVXAY3dRjW2zLGVfvrD7sp73Jdj7P4b0ZT2rQc1Ijj1H04E15YI+jA6AICkTAAASS26CijGBW/f3P8+zx5/tj3+9Y+/H/zcGk/nWcs+IdFcEZz6H0YE15YI+jA6AICkTAAASVV/KHw0JS5YMhZY47axc0VwJeq/nwiuLRH0YXQAAEmZAACSWjQCiuIV86t4A8XN7ulIzx7v/hzbsSlX24c5PCrp2ZR2dciNMJmJ4Pongv6QDgAgKRMAQFKLRkCxBR7rztX5wp4bY6OhUks4ZZxrMTqCC61o/QhuRwT3nghuXiLo93QAAEmZAACSanYjWGkPjVI7dvbVP9vjGAdFY6OhDFFPJIKrp/QUsJLSb/5ss6vznZo3iuAePQmfdblZxQPiS/z+P6QDAEjKBACQVLMbweaKg6K5oqFjJYJra8j3fX3z6fa4VPMav+ce4ojalvz9DzkXPdRWBwCQlAkAIKnZruTXeBDz+cnDsc8UQ7Z7Lel5FcTYFSmlVjQ+5HrKuSjVeUibHMeg5vtNqfMQmc9FKfYpmevGsdo11wEAJGUCAEiqyiqg2LoOUW5v5499oiltXW9KEdyQ7WRL+43MFcGNXTVUEr9jzxHEEFbBrUtpdVZJadVWbzXXAQAkZQIASKrKKqAhEVCNVT21xQiotwhibP2jtZyL3upfY+Vb1PMquOhYz0XP9Z+r5joAgKRMAABJNdsLaOxV9VbiODebflcBjdVzzdeoTuzW1yq4qOcVcfNF0H3Vv0bNdQAASZkAAJJaNALqIXYoRU93o57jJ4Jray31j47pXKyl/rVrrgMASMoEAJDUohFQD21X6XNLfz+maKiHVjdzBNdD/aNs56KH+vdWcx0AQFImAICkmq0C6iEOKjnWFriHmmeO4Hqof5TtXPRQ/95qrgMASMoEAJBUlQjo6vbd/f9wc/8eHbHNKf7fmQzZJ6T2GFoRwbW1lvpHx3Qu1lL/JWuuAwBIygQAkFT1J/lMeVLPXE+96WEMtQ35jj3EX3ONoYfzMlfNox7qH2U7Fz3Uf8ma6wAAkjIBACT1HxJrUaw+wMKFAAAAAElFTkSuQmCC" alt="오우거 · 3층 현재 그림" style="height:96px"></td></tr><tr><td><code>assets/monsters/chort.png</code></td><td>초르트 · 3층</td><td><code>monsters</code> → <code>chort</code></td><td class="num">16×24px · 4프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABICAYAAACgP/qyAAAC30lEQVR4nO3dPW4UQRCG4eFHQsRI5F60EY6QIOECljgAMWScwSLiJmQ+gCXniIjURCs2IOQGRBCxbqEpu2q7a2Z6vveJVi1v72q0pfrUPT0eBgAAAAAAAAAAAGCF7s39BaBls9n8+fd6v983//1F57/f+gsAPaEAII0IhHRlLNl9/3YY3z5/eXhdE4dq5qcDQBoFAGkP5/4C0PVfXAmt3lixJ4oOAGkUAKSFI9DSNjKwPuVvIBsdANIoAEhzRYwlb2Rg+TyR5ur06dHzn13/Gh3nXiDgDhQApFVthC1hIwN9+fjo9PD69XY8ukSV8cmKQxY6AKRRAJCWci/QlBsZata6Efns4nJ0/MfbN7H3FiuHHnQASKMAIC0cgbZGi6nZyLDmzNBjhLhlo7DJZ2XPv2R0AEijACAtHIGm3MggQtzO+qyaeeby/tWH0fHzk+Pf60EHgDQKANKkD8WvKUKUPCty0Xtmsp2f/Gzy3rPr2HvpAJBGAUBaswg0170cGZYcIVptRJZ/b82ZsXL16fdNRtldjJ/+s04Fesa5FwgIoAAgTW4VqPcIsbQTVR7WdbBW3qzraY0/ePzk6OtMB4A0CgDSmkWgue7liOoxQnj0uApXRqPoKcJW8ZIOAGkUAKSFI5C1kfGlaiPjcnR8Sj1GiDXxxKGMVTU6AKRRAJDmikBWe4puWHjG13r4Olsvq3AWzypQxgMH6ACQRgFAWngVqGbzwjPnXHqJEGtahav5/bSKQ3QASKMAIC3cOrKf/Jz9uMJSzckjz3jGc42mNMFzmYbMcc9t0nQASKMAIK3Zv0mdq4V5ECGOG8+4/hm3o5eij9akA0AaBQBp4Qi0tBbmQYTwy77+5fcvlRt8Hp55iEDAHSgASKs6FP91d3MYvFULG4bcQ+WfX7w7vC4Ps5cnv2rGp7yXpsfr72FFl4zVPDoApFEAkBZeBbJEVwwy5pzys/j+835WqznpAJBGAUDaX3ZX42dKztcDAAAAAElFTkSuQmCC" alt="초르트 · 3층 현재 그림" style="height:72px"></td></tr><tr><td><code>assets/monsters/boss.png</code></td><td>마도왕 베르가스 · 보스</td><td><code>monsters</code> → <code>boss</code></td><td class="num">32×36px · 3프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAABsCAYAAADKbm8jAAAFh0lEQVR4nO3dv20cRxQH4LNhwB24AAqMrNSRGiDgApy5E0UsxLELMKAGGBlwREeEWQA7UGQnsvgI3YAzmpl9s7ffFxGLvdu9t8fB+93sn9MJAAAAAAAAAAAAAAAAAAAAAPjkm+wd4HJcXV39+//fj4+Pvlsb22P9v83eAeC4DEBAml20abX22ILuRam2PTV3vOpdav11QEAaAxCQ5rvsHah1qS3oymJ9el476njtUWsNS7Wqec+ebWXRAQFpDEBAmqUjmAjwdXrqVlOT2dFg72o+7/vv337++/bj/auv/fD2h7Pvc/dwfvm766dX17+9OqVHNh0QkMYABKSZHkFq2tFSaze7db/UCBaNquGUCBCiR42Vj1drnWM9b+6fa1WKZqX6v/n9j7PL//nl51fXv/7xp1e3WzLqWOiAgDQGICDN9FmwnhOrotmzAK0xcLU40BoBSi13ayv+61+/nV1eigBx/dvGCLDaDGbN/sR14mc8nZ6/n/G7ffcwdBervfh/CeWv+f/toQMC0hiAgDTTI9jsmaxREaBntm5Lo6JWbLk/nNaKAO8fzu/zCvWPWmP7i6gbPmPp54IacSYrKv1kUVq/ZHbs1QEBaQxAQJquCNYTr0bNwoyStd1WPddqldryHjMiQGlGZrVZsKj1+q9S7CpF0Zv7tu9kPLmxZn/irFzJjPrrgIA0BiAgTVcEqzlJafYszKgIUDMLE60WB1pnXqL42VeOANEK9W/9CeLFdyn82RqNW3++qPl5oXS8nIgIXCwDEJBmSutauv6l9YSrnls31KjZt5oosXIEexlznvUci1Fq9iHWf4U6RzXXCY6KLQ9///n57/gzwuzls2uuAwLSGICANMOuBRs1C1NaXnptj55rcFaLAyWl2ZAYbUp354vLS3fna32fF8tP55fv0ezvQ+s1XD3rb/nd1gEBaQxAQJphrdbsWZgsK8/CRLNve5I1CxOtXP8ae3k+mggGHIIBCEgz/XYco2Zhtly+dzOes7blLEy099hVMvsaq1ZZddYBAWkMQECa6deCjWIWpt8KrX6Nvde5pHQLkRWOiwgGHI4BCEgz5blgZmHWJwJsr+YzjjoupfdZ7bjrgIA0BiAgTVrbu0L7V3KEOBBt2aLXRIOjqal/zXHZYw11QEAaAxCQZsosGJdhxoxMzfKjyarPChFYBwSkMQABaUQwikbNgrXO8hxNTR1qjkVrnVeouQ4ISGMAAtJMvyn9ateetGptibPa2tY2fuXjUlPDPca3Feq/WgTWAQFpDEBAmt3cETGquXvhlu+zQgQ4QgReLfZGo2aysmTFXh0QkMYABKQZdiLiljeib11/1PtEK7T9USmqrHBcet5n5dhVssLsUqusOuuAgDQGICBN2rVg8THNpcc3x7Y8PkZ5xvLSdqOV2+kVotaWEXg1R4vAo+iAgDQGICDN9BMRS1ErRqHV3D0871vc50uKYDURuHS8bu6fhi8vbTe6pPrXyHoc+ZazwDogII0BCEizaQSr8e766fWVNhRjwsoRIBKBtycCfx0dEJDGAASk2fR2HKU41hq7Yos+O7LFNjXaSxy4pAgc7bH+IvCXdEBAGgMQkGb6TelbI8AopSgR28ua9UsRIFohDtTMwlxSBI5WqH90hAgc9dRfBwSkMQABabpux7HyTbZLUat9/fMnIq7w2XtiV9Raq5rXjorA0cpRq6R0kmG0cgQucS0YsHsGICBNVxvV+iyk1hmB0jUprXq2u1rbX6On5qvZy7E4wiywExGBi2IAAtJs2tLWRIMZLXfWdlcgAm9PBK6nAwLSGICANGnPBYuyWu69t/o14ue6vTqlRNGs7WZprXnJESKwDghIYwAC0qTNgpXMaPmytrsa9c9lFvhLOiAgjQEISPMfGcReCRx0wYQAAAAASUVORK5CYII=" alt="마도왕 베르가스 · 보스 현재 그림" style="height:96px"></td></tr><tr><td><code>assets/props/chest.png</code></td><td>보물상자 (미궁 화면)</td><td><code>props</code> → <code>chest</code></td><td class="num">16×16px · 1프레임</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABuElEQVR4nO1YPUsDQRDdk0NBTrSxEIzIVWnSGbuAv8A2/gQh5pdoacDGwk5bf0HQTq28QqtDPMHWYFD8gNjNvoUdcOFO8+BeNbmd253HG152zpgaNWrU+E9E2kKaphPf8zzP1XfKQOi5M1UW8xegJxBrkt2frUq8uzOyC0p+WdiKFiQ+Ol2UuNk13nPpFaAnEOOPm71E4vHli8StxpfEB9uJqRIn55/eGrC2jcOxxPQK0BNwWuju9l3idm9F4mwwgpy3SgvKinmJk451oevBszefXgF6ArG2oLlQ1Wg1/C6kgV4BegJqCyWdJYnRhTbXvystKCtmoQbrQgYcEkGvAD2B0lzo6sFuhW2AQIfRWrF2ITY4LYT3HwS6UG9/2ZtzDFMbTlIInOx+sw+6UBtc0Vw8SUivAD0Bp4WaXSsNTkDoQpiDwGEc3QP/ELWzEP21Oe8+OIUh6BWgJxDhdyFsg+Hk1fsC5iC0fA2h+2i10StAT8BxIbyHmMIvsZODUPI1hO6D+cNH+5xeAXoCTgvhNViVWEFofug+7hX9QyJ6BegJqBOZNlVNG+gVoCfgtFDofWYaQK8APYEfcx6KwOog7isAAAAASUVORK5CYII=" alt="보물상자 (미궁 화면) 현재 그림" style="height:48px"></td></tr>
+</tbody></table></div>
+</section>
+
+<section>
+<h2>3. 그림 규칙</h2>
+<h3>애니메이션은 가로 한 줄 스트립</h3>
+<p>움직이는 그림은 프레임을 <b>왼쪽에서 오른쪽으로 한 줄</b>에 이어 붙인 PNG 한 장이다. 모든 프레임은 같은 크기여야 한다. 게임은 「이미지 너비 ÷ frames」로 한 프레임 너비를 계산한다.</p>
+<pre><code>[프레임1][프레임2][프레임3][프레임4]   ← 16×28 짜리 4장이면 이미지는 64×28</code></pre>
+<ul>
+  <li><b>배경은 투명</b>(PNG 알파)으로 둔다. 미궁 돌벽 위에 그대로 겹쳐 그린다.</li>
+  <li><b>몬스터는 정면</b>을 보게, 발이 그림 맨 아래에 닿게 그린다. 게임이 바닥선에 맞춰 세운다.</li>
+  <li><b>정지 그림</b>도 된다. 그때는 manifest의 <code>frames</code>를 <code>1</code>로 둔다.</li>
+</ul>
+<h3>도트 그림과 일반 일러스트</h3>
+<ul>
+  <li><b>도트 그림</b>은 원본 크기(16~48px)로 넣고 <code>"pixel": true</code>. 게임이 정수 배로 확대해서 선명하게 보인다.</li>
+  <li><b>고해상도 일러스트</b>(손그림, 3D 렌더 등)는 <code>"pixel": false</code>. 높이 256~512px 정도를 권한다. 화면 크기에 맞춰 부드럽게 줄인다.</li>
+</ul>
+<h3>화면에 나오는 높이</h3>
+<p>그림 크기와 상관없이 게임이 높이를 맞춘다. 보통 몬스터 약 96px, 큰 몬스터(오우거) 약 120px, 보스 약 170px, 파티 초상 40px이다. 몬스터가 4마리 이상이면 조금 작아진다.</p>
+</section>
+
+<section>
+<h2>4. manifest.json</h2>
+<p>그림마다 한 줄씩 적혀 있다. 파일 이름이나 프레임 수를 바꿀 때만 고치면 된다.</p>
+<pre><code>{
+  "party": {
+    "전사": { "src": "party/warrior.png", "frames": 4, "fps": 6, "pixel": true }
+  },
+  "monsters": {
+    "goblin": { "src": "monsters/goblin.png", "frames": 4, "fps": 6, "pixel": true },
+    "boss":   { "src": "monsters/boss.png",   "frames": 3, "fps": 5, "pixel": true }
+  },
+  "props": {
+    "chest":  { "src": "props/chest.png",     "frames": 1, "fps": 1, "pixel": true }
+  }
+}</code></pre>
+<div class="tbl"><table>
+<thead><tr><th>항목</th><th>뜻</th></tr></thead>
+<tbody>
+<tr><td><code>src</code></td><td>assets 폴더 기준 파일 경로</td></tr>
+<tr><td><code>frames</code></td><td>스트립에 든 프레임 수 (정지 그림은 1)</td></tr>
+<tr><td><code>fps</code></td><td>1초에 넘기는 프레임 수. 4~8이 자연스럽다</td></tr>
+<tr><td><code>pixel</code></td><td>도트 그림이면 true, 일반 일러스트면 false</td></tr>
+</tbody></table></div>
+<p>왼쪽의 이름(<code>"전사"</code>, <code>"goblin"</code> 등)은 게임 코드가 찾는 열쇠라서 바꾸면 안 된다. 바꾸는 것은 오른쪽 값뿐이다.</p>
+</section>
+
+<section>
+<h2>5. 그림 바꾸는 순서</h2>
+<ol>
+  <li>새 그림을 위 규칙대로 만든다 (투명 배경 PNG, 가로 스트립).</li>
+  <li>바꿀 파일과 <b>같은 이름</b>으로 저장한다. 예: 고블린을 바꾸려면 <code>goblin.png</code>.</li>
+  <li>프레임 수가 원래와 다르면 manifest.json의 <code>frames</code>를 고친다. 도트가 아니면 <code>pixel</code>을 false로.</li>
+  <li>게임에 반영한다.
+    <ul>
+      <li><b>Claude에게 맡길 때:</b> 대화에 그림 파일을 올리고 "이 그림을 monsters/goblin.png로 바꿔줘, 4프레임이야"처럼 말한다. 교체 후 같은 게임 링크에 다시 올린다.</li>
+      <li><b>직접 할 때:</b> 게임 폴더를 GitHub 저장소로 옮겨 두면 파일만 바꿔 커밋하고, Claude에게 그 저장소로 다시 게시해 달라고 하면 된다.</li>
+    </ul>
+  </li>
+</ol>
+<p class="note">그림 파일을 못 찾거나 깨졌으면 게임이 멈추지 않고 내장 아이콘(실루엣)으로 대신 그린다. 그러니 그림이 아이콘으로 나오면 파일 이름이나 manifest 경로부터 확인하면 된다.</p>
+</section>
+
+<section>
+<h2>6. 그림이 아닌 것</h2>
+<ul>
+  <li><b>이펙트</b>(베기 궤적, 불꽃, 신의 빛, 잠의 안개, 약화, 저주의 화살, 피해 숫자, 화면 흔들림)는 코드로 그린다. 그림 파일이 없다.</li>
+  <li><b>미궁의 돌벽·바닥·촛불빛</b>도 코드로 그린다.</li>
+  <li><b>마을 간판, 계단 표시, 아이콘</b>은 game-icons.net 아이콘을 게임 안에 넣어 두었다.</li>
+  <li><b>새 몬스터나 새 직업을 추가</b>하려면 그림뿐 아니라 능력치 등 코드도 필요하다. Claude에게 "monsters/에 bat.png를 넣고 1층에 박쥐를 추가해줘"처럼 요청하면 된다.</li>
+</ul>
+</section>
+
+<section>
+<h2>7. 다른 무료 그림을 찾을 때</h2>
+<p>상업적으로도 쓸 수 있는 라이선스(CC0, CC BY)인지 꼭 확인한다. 평판이 좋은 곳은 다음과 같다.</p>
+<ul>
+  <li><b>0x72 DungeonTileset II</b> (itch.io) — 지금 쓰는 그림. CC0. 같은 작가의 확장판도 있다.</li>
+  <li><b>OpenGameArt.org</b> — 도트·일러스트 다수. 그림마다 라이선스가 다르니 하나씩 확인.</li>
+  <li><b>Kenney.nl</b> — 전부 CC0. 깔끔하지만 고딕풍은 적다.</li>
+  <li><b>itch.io 무료 에셋</b> — "dark fantasy", "gothic", "pixel monster"로 검색. 게시글마다 이용 조건이 다르다.</li>
+</ul>
+<p class="note warn">CC BY 그림은 작가 이름을 게임 화면(하단 출처)에 적어야 한다. 바꾼 그림의 출처는 <code>assets/CREDITS.txt</code>에도 함께 적어 두자.</p>
+</section>
+
+<section>
+<h2>8. 라이선스</h2>
+<ul>
+  <li>도트 캐릭터·몬스터·상자: 0x72 「16x16 DungeonTileset II」 — CC0 1.0 (출처 표기 의무 없음)</li>
+  <li>아이콘: game-icons.net — Lorc, Delapouite, Skoll, DarkZaitzev — CC BY 3.0 (게임 하단에 표기)</li>
+</ul>
+</section>
+</main>
