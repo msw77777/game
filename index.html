@@ -89,7 +89,7 @@ canvas{display:block;width:100%;height:auto;max-width:100%;background:#050304}
 .qlist .q{display:flex;justify-content:space-between;gap:10px}
 .qlist .q b{font-weight:400;color:var(--dim);font-variant-numeric:tabular-nums}
 .qlist .q.ok b{color:var(--gold)}
-#cmd{display:grid;gap:10px}
+#cmd{display:grid;gap:10px;align-content:start}
 .prompt{margin:0;color:var(--gold)}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -363,7 +363,25 @@ const QUESTS = [
   {id:'q_skel',  n:'해골 병사 정화', d:'사원의 부탁. 해골 병사 5구를 다시 잠재워라.', kind:'kill', tgt:'skeleton', need:5, gold:220, xp:120},
   {id:'q_necro', n:'강령술사 사냥',  d:'지하 3층에서 죽은 자를 깨우는 강령술사 3명을 처치하라.', kind:'kill', tgt:'necromancer', need:3, gold:400, xp:250},
 ];
+// 2회차 의뢰 (cyc: 이 회차부터 게시판에 붙는다)
+QUESTS.push(
+  {id:'q_unk',     n:'알 수 없는 미궁의 끝', d:'폐허 아래 열린 알 수 없는 미궁. 그 가장 깊은 곳에 있는 것을 쓰러뜨려라.', kind:'unkboss', need:1, main:1, cyc:2},
+  {id:'q_unk3',    n:'심연 정찰', d:'알 수 없는 미궁의 3층까지 내려가라. 들어갈 때마다 길이 바뀐다.', kind:'unkfloor', need:3, gold:300, xp:300, potions:3, cyc:2},
+  {id:'q_unkkill', n:'이계의 마물 사냥', d:'알 수 없는 미궁의 마물 15마리를 처치하라.', kind:'kill', tgt:'unknown', need:15, gold:400, xp:400, cyc:2},
+);
 const QMAX = 3;
+// 마도왕을 쓰러뜨리면 얻는 유니크 전리품 (파티에 있는 직업마다 하나씩)
+const UNIQUES = {
+  '전사':  {id:'u_sword',  n:'흑철의 대검',   d:'베르가스의 근위대장이 쓰던 검. 공격 +6', atk:6},
+  '도적':  {id:'u_dagger', n:'그림자 송곳',   d:'공격 +3, 급소 확률 +15%', atk:3, crit:0.15},
+  '승려':  {id:'u_grail',  n:'핏빛 성배',     d:'주문 위력 +4, 최대 MP +4', mag:4, mp:4},
+  '마법사':{id:'u_crown',  n:'마도왕의 왕관', d:'주문 위력 +5, 최대 MP +5', mag:5, mp:5},
+};
+const uniqueById = id => Object.values(UNIQUES).find(u=>u.id===id);
+// 알 수 없는 미궁: 들어갈 때마다 새로 만들어지고, 몬스터는 이계의 힘으로 강해진다
+const UNK = {hp:1.7, atk:1.35, xp:2.2, gold:2};
+const UNKNOWN_BOSS = {id:'boss',n:'이름 없는 자',hp:[460,460],atk:[17,27],def:5,xp:1600,g:[1000,1000],ag:13,boss:1,big:1,ic:'lorc_crowned-skull'};
+const UNK_TEXT = {1:'알 수 없는 미궁 1층. 벽이 숨을 쉬듯 움직인다. 들어올 때마다 길이 바뀐다.', 2:'알 수 없는 미궁 2층. 발소리가 한 박자 늦게 따라온다.', 3:'알 수 없는 미궁 3층. 어둠 너머에서 이름 없는 무언가가 기다린다.'};
 const DX=[0,1,0,-1], DY=[-1,0,1,0], DIRS=['북','동','남','서'], TAGS=['갑','을','병','정','무'];
 const SLOTS = 3;
 
@@ -395,13 +413,17 @@ const UI = {slots:null, confirm:null, saving:false, scene:'square', fac:null, an
 function base(mode){
   return {mode,townView:'main',floor:1,x:1,y:1,dir:1,gold:120,potions:2,party:[],
     explored:{1:[],2:[],3:[]},opened:[],log:[],bossDead:false,combat:null,draft:null,
-    kills:{}, chests:0, maxFloor:0, quests:{acc:{}, done:[], ready:[]}};
+    kills:{}, chests:0, maxFloor:0, quests:{acc:{}, done:[], ready:[]},
+    cycle:1, rebirths:0, spirit:false, spiritUsed:false, realm:'normal', unk:null, unkMax:0, unkCleared:false, loot:[], ending:null};
 }
 // 예전 버전의 저장 데이터도 읽을 수 있게 빠진 값을 채운다
 function normalize(){
   S.kills ||= {}; S.chests ||= 0; S.maxFloor ||= 0; S.quests ||= {acc:{},done:[],ready:[]};
   S.quests.ready ||= [];
   if(S.townView==='save') S.townView='inn';
+  S.cycle ||= 1; S.rebirths ||= 0; S.realm ||= 'normal'; S.unkMax ||= 0; S.loot ||= [];
+  if(S.realm==='unknown' && !S.unk) S.realm='normal';
+  if(S.mode==='won') S.mode='town';
   S.party.forEach(m=>{ m.bf ||= []; });
   if(S.combat && S.combat.enemies.some(e=>!e.id)){ S.combat=null; if(S.mode==='combat') S.mode='dungeon'; }
 }
@@ -473,8 +495,8 @@ function autoChar(name, race, cls){
   return mk(name, cls, race, st);
 }
 function toTitle(){ S=base('title'); UI.slots=null; UI.confirm=null; log('촛불 하나가 낡은 기록부를 비춘다.','sys'); render(); refreshSlots(); }
-function newGame(){
-  S=base('create'); newDraft();
+function newGame(rebirths=0){
+  S=base('create'); S.rebirths=rebirths; newDraft();
   log('모험가 길드. 서기가 두꺼운 등록부를 펼친다.','sys');
   log('"미궁에 들어갈 자는 이름과 출신, 그리고 재능을 적으시오. 최대 넷까지."','gold');
   render();
@@ -490,7 +512,8 @@ function beginAdventure(){
   log('(길드 의뢰 게시판에서 일을 받을 수 있다. 진행은 여관에서만 기록부에 남길 수 있다.)','sys');
   render();
 }
-function rollBonus(){ let b=rnd(5,9); if(Math.random()<0.1) b+=10; return b; }
+const rebirthBonus = () => Math.min(5, S.rebirths||0);
+function rollBonus(){ let b=rnd(5,9); if(Math.random()<0.1) b+=10; return b + rebirthBonus(); }
 function newDraft(){
   const used=S.party.map(m=>m.name), free=NAMES.filter(n=>!used.includes(n));
   S.draft={name:pick(free), race:'인간', add:{str:0,iq:0,pie:0,vit:0,agi:0,luk:0}, bonus:rollBonus(), cls:null};
@@ -534,10 +557,12 @@ function qCounter(q){
   if(q.kind==='kill') return S.kills[q.tgt]||0;
   if(q.kind==='chest') return S.chests;
   if(q.kind==='floor') return S.maxFloor;
+  if(q.kind==='unkfloor') return S.unkMax;
+  if(q.kind==='unkboss') return S.unkCleared?1:0;
   return S.bossDead?1:0;
 }
 function qProgress(q){
-  const base = q.kind==='floor'||q.kind==='boss' ? 0 : (S.quests.acc[q.id]||0);
+  const base = ['floor','boss','unkfloor','unkboss'].includes(q.kind) ? 0 : (S.quests.acc[q.id]||0);
   return Math.min(q.need, qCounter(q)-base);
 }
 const sideActive = () => Object.keys(S.quests.acc).filter(id=>!qdef(id).main);
@@ -549,7 +574,7 @@ function checkQuests(){
 }
 function acceptQuest(id){
   if(sideActive().length>=QMAX){ log(`의뢰는 한 번에 ${QMAX}개까지 받을 수 있다.`,'bad'); return render(); }
-  const q=qdef(id); S.quests.acc[id]=q.kind==='floor'?0:qCounter(q);
+  const q=qdef(id); S.quests.acc[id]=['floor','unkfloor'].includes(q.kind)?0:qCounter(q);
   log(`의뢰 「${q.n}」를 받았다.`,'good'); checkQuests(); render();
 }
 function claimQuest(id){
@@ -560,23 +585,59 @@ function claimQuest(id){
 }
 
 // ───────── 미궁 ─────────
+// 알 수 없는 미궁의 층: 시드로 만든 미로. 같은 시드면 같은 모양이라 저장해도 그대로다
+function mulberry(a){ return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function genFloor(seed,f){
+  const N=13, r=mulberry(seed*7+f*131), g=Array.from({length:N},()=>Array(N).fill('#')), D4=[[0,-1],[1,0],[0,1],[-1,0]];
+  const st=[[1,1]]; g[1][1]='.';
+  while(st.length){
+    const [x,y]=st[st.length-1];
+    const ds=D4.map(([dx,dy])=>[dx*2,dy*2]).filter(([dx,dy])=>{ const nx=x+dx, ny=y+dy; return nx>0&&ny>0&&nx<N-1&&ny<N-1&&g[ny][nx]==='#'; });
+    if(!ds.length){ st.pop(); continue; }
+    const [dx,dy]=ds[Math.floor(r()*ds.length)]; g[y+dy/2][x+dx/2]='.'; g[y+dy][x+dx]='.'; st.push([x+dx,y+dy]);
+  }
+  // 막다른 길만 있으면 답답하니 벽 몇 군데를 터서 고리를 만든다
+  for(let i=0;i<10;i++){ const x=1+Math.floor(r()*(N-2)), y=1+Math.floor(r()*(N-2));
+    if(g[y][x]==='#' && ((g[y][x-1]==='.'&&g[y][x+1]==='.')||(g[y-1][x]==='.'&&g[y+1][x]==='.'))) g[y][x]='.'; }
+  const dist={'1,1':0}, q=[[1,1]]; let far=[1,1];
+  while(q.length){ const [x,y]=q.shift();
+    for(const [dx,dy] of D4){ const nx=x+dx, ny=y+dy, k=nx+','+ny;
+      if(g[ny][nx]==='.' && !(k in dist)){ dist[k]=dist[x+','+y]+1; q.push([nx,ny]); if(dist[k]>dist[far[0]+','+far[1]]) far=[nx,ny]; } } }
+  g[1][1]='<'; g[far[1]][far[0]] = f===3 ? 'B' : '>';
+  const dead=Object.keys(dist).map(k=>k.split(',').map(Number)).filter(([x,y])=>g[y][x]==='.' && D4.filter(([dx,dy])=>g[y+dy][x+dx]!=='#').length===1);
+  for(let i=0;i<2&&dead.length;i++){ const [x,y]=dead.splice(Math.floor(r()*dead.length),1)[0]; g[y][x]='T'; }
+  return g.map(row=>row.join(''));
+}
+const UNK_CACHE={};
+function mapOf(f){ if(S.realm!=='unknown') return MAPS[f]; const k=S.unk.seed+':'+f; return UNK_CACHE[k] ||= genFloor(S.unk.seed,f); }
+const bossGone = () => S.realm==='unknown' ? S.unk.bossDead : S.bossDead;
+const floorText = f => S.realm==='unknown' ? UNK_TEXT[f] : FLOOR_TEXT[f];
 function cell(x,y,f=S.floor){
-  const row=MAPS[f][y]; if(!row||x<0||x>=row.length) return '#';
+  const row=mapOf(f)[y]; if(!row||x<0||x>=row.length) return '#';
   const ch=row[x];
   if(ch==='T' && S.opened.includes(`${f}:${x},${y}`)) return '.';
-  if(ch==='B' && S.bossDead) return '.';
+  if(ch==='B' && bossGone()) return '.';
   return ch;
 }
 const wall = (x,y) => cell(x,y)==='#';
-function find(f,ch){ for(let y=0;y<MAPS[f].length;y++){const x=MAPS[f][y].indexOf(ch); if(x>=0) return {x,y};} }
+function find(f,ch){ const m=mapOf(f); for(let y=0;y<m.length;y++){const x=m[y].indexOf(ch); if(x>=0) return {x,y};} }
 function markExplored(){ const k=`${S.x},${S.y}`, e=S.explored[S.floor]; if(!e.includes(k)) e.push(k); }
 function openDir(x,y){ for(let d=0;d<4;d++) if(!wall(x+DX[d],y+DY[d])) return d; return 0; }
-function arrive(){ if(S.floor>S.maxFloor){ S.maxFloor=S.floor; checkQuests(); } }
+function arrive(){
+  if(S.realm==='unknown'){ if(S.floor>S.unkMax){ S.unkMax=S.floor; checkQuests(); } }
+  else if(S.floor>S.maxFloor){ S.maxFloor=S.floor; checkQuests(); }
+}
 
 function enterDungeon(){
   if(!living().length){ log('살아있는 동료가 없다. 사원에 먼저 가자.','bad'); return render(); }
+  S.spiritUsed=false;
+  // 2회차부터 옛 미궁은 무너졌다. 입구는 들어갈 때마다 모양이 바뀌는 알 수 없는 미궁으로 이어진다
+  if(S.cycle>=2){
+    S.realm='unknown'; S.unk={seed:(Math.random()*1e9)|0, bossDead:false}; S.explored={1:[],2:[],3:[]}; S.opened=[];
+    log('「?」 — 알 수 없는 미궁. 들어설 때마다 길이 바뀐다.','mag');
+  } else S.realm='normal';
   S.mode='dungeon'; S.floor=1; const p=find(1,'<'); S.x=p.x; S.y=p.y; S.dir=openDir(p.x,p.y);
-  markExplored(); arrive(); log(FLOOR_TEXT[1],'sys'); render();
+  markExplored(); arrive(); log(floorText(1),'sys'); render();
 }
 function move(k){
   if(S.mode!=='dungeon') return;
@@ -595,6 +656,7 @@ function move(k){
 }
 function onEnter(){
   const ch=cell(S.x,S.y);
+  if(ch==='B' && S.realm==='unknown'){ log('끝없는 어둠. 형체 없는 무언가가 파티의 이름을 하나씩 부른다.','bad'); log('"…너희는 누구였지?"','mag'); return startCombat(true); }
   if(ch==='B'){ log('룬이 새겨진 방. 검붉은 거체가 어둠 속에서 몸을 일으킨다.','bad'); log('"서약의 검을 원하는가. 그렇다면 여기서 썩어라."','bad'); return startCombat(true); }
   if(ch==='T') log('낡은 보물상자가 놓여 있다.','gold');
   else if(ch==='<') log(S.floor===1?'위로 올라가는 계단. 마을로 돌아갈 수 있다.':'위층으로 올라가는 계단이다.','sys');
@@ -609,7 +671,7 @@ function stairs(){
     if(S.floor===1){ S.mode='town'; S.townView='main'; UI.scene='square'; UI.fadeIn=now(); log('파티는 지상으로 돌아왔다. 새벽 종소리가 울린다.','good'); return render(); }
     S.floor--; const p=find(S.floor,'>'); S.x=p.x; S.y=p.y;
   } else if(ch==='>'){ S.floor++; const p=find(S.floor,'<'); S.x=p.x; S.y=p.y; }
-  S.dir=openDir(S.x,S.y); markExplored(); arrive(); log(FLOOR_TEXT[S.floor],'sys'); render();
+  S.dir=openDir(S.x,S.y); markExplored(); arrive(); log(floorText(S.floor),'sys'); render();
 }
 function openChest(){
   S.opened.push(`${S.floor}:${S.x},${S.y}`); S.chests++;
@@ -622,6 +684,13 @@ function openChest(){
   const g=rnd(30,80)*S.floor; S.gold+=g; log(`금화 ${g}G를 얻었다.`,'gold');
   if(Math.random()<0.6){ S.potions++; log('치유 물약을 하나 발견했다.','gold'); }
   checkQuests(); render();
+}
+function useSpirit(){
+  if(!S.spirit || S.spiritUsed || S.mode!=='dungeon') return;
+  const p=find(S.floor,'<'); S.spiritUsed=true; S.x=p.x; S.y=p.y; S.dir=openDir(p.x,p.y); markExplored();
+  fx('spirit',W/2,H/2,{dur:1100}); UI.fadeIn=now();
+  log('✧ 정령이 푸른 빛으로 파티를 감싼다. 눈을 뜨니 이 층의 입구다.','mag');
+  log('(정령은 힘을 다해 잠들었다. 다음에 미궁에 들어올 때 다시 깨어난다.)','sys'); render();
 }
 function wounded(){ return living().filter(m=>m.hp<m.mhp||hasBf(m,'poison')).sort((a,b)=>a.hp/a.mhp-b.hp/b.mhp)[0]; }
 function drinkPotion(t){ S.potions--; const h=Math.min(15,t.mhp-t.hp); t.hp+=h; const cured=hasBf(t,'poison'); delBf(t,'poison'); pfx(t,'heal',`+${h}`); return `HP +${h}${cured?', 해독':''}`; }
@@ -687,15 +756,26 @@ function rez(i){
 }
 
 // ───────── 전투 ─────────
-function spawn(b){ return {id:b.id,n:b.n,name:b.n,ic:b.ic,hp:rnd(...b.hp),atk:b.atk,def:b.def,xp:b.xp,g:rnd(...b.g),ag:b.ag,
-  on:b.on,cast:b.cast,undead:b.undead,boss:b.boss,big:b.big,sleep:0,bf:[],ph:Math.random()*4}; }
+function spawn(b){
+  const e={id:b.id,n:b.n,name:b.n,ic:b.ic,hp:rnd(...b.hp),atk:b.atk,def:b.def,xp:b.xp,g:rnd(...b.g),ag:b.ag,
+    on:b.on,cast:b.cast,undead:b.undead,boss:b.boss,big:b.big,sleep:0,bf:[],ph:Math.random()*4};
+  // 알 수 없는 미궁의 마물은 이계의 힘으로 강해진다 (보스는 원래 수치 그대로)
+  if(S.realm==='unknown' && b!==UNKNOWN_BOSS){
+    e.unk=1; e.n=e.name='이계의 '+b.n; e.hp=Math.round(e.hp*UNK.hp); e.atk=b.atk.map(v=>Math.round(v*UNK.atk));
+    e.xp=Math.round(b.xp*UNK.xp); e.g=Math.round(e.g*UNK.gold); if(b.cast) e.cast={...b.cast,dmg:b.cast.dmg.map(v=>Math.round(v*UNK.atk))};
+  }
+  if(b===UNKNOWN_BOSS) e.unk=1;
+  return e;
+}
 function startCombat(boss){
   let list=[];
-  if(boss) list=[spawn(NECRO),spawn(BOSS),spawn(NECRO)];
+  if(boss) list = S.realm==='unknown' ? [spawn(MON[3][3]),spawn(UNKNOWN_BOSS),spawn(MON[3][3])] : [spawn(NECRO),spawn(BOSS),spawn(NECRO)];
   else {
-    const b=pick(MON[S.floor]), n=rnd(S.floor===1?1:2,Math.min(4,S.floor+2));
+    // 알 수 없는 미궁은 한 층 더 깊은 곳의 마물이 나온다
+    const pool=MON[S.realm==='unknown'?Math.min(3,S.floor+1):S.floor];
+    const b=pick(pool), n=rnd(S.floor===1&&S.realm!=='unknown'?1:2,Math.min(4,S.floor+2));
     for(let i=0;i<n;i++) list.push(spawn(b));
-    if(Math.random()<0.3) list.push(spawn(pick(MON[S.floor])));
+    if(Math.random()<0.3) list.push(spawn(pick(pool)));
   }
   const cnt={}; list.forEach(e=>cnt[e.n]=(cnt[e.n]||0)+1);
   const seen={}; list.forEach(e=>{ if(cnt[e.n]>1){ seen[e.n]=(seen[e.n]||0); e.name=`${e.n} ${TAGS[seen[e.n]++]}`; } });
@@ -737,7 +817,7 @@ async function resolveRound(){
   if(c.flee){
     c.flee=false;
     if(!c.boss && Math.random()<0.55){ log('파티는 무사히 도망쳤다!','sys'); busy=false; endCombat(); S.mode='dungeon'; return render(); }
-    log(c.boss?'베르가스의 결계가 길을 막고 있다!':'도망치지 못했다!','bad'); render(); await sleep(400);
+    log(c.boss?'보이지 않는 결계가 길을 막고 있다!':'도망치지 못했다!','bad'); render(); await sleep(400);
   }
   S.party.forEach(m=>m.guard=false);
   c.cmds.forEach(cm=>{ if(cm.act==='guard') S.party[cm.who].guard=true; });
@@ -786,7 +866,7 @@ function partyAct(cm){
     efx(e,'slash',{dur:350});
     if(rnd(1,100)>hit){ log(`${m.name}의 공격! 하지만 ${J(e.name,'은','는')} 피했다.`); efx(e,'num',{text:'빗나감',color:'#8f7f6c'}); return true; }
     let d=Math.max(1,rnd(1,c.die)+m.atkB+mod(m.st.str)+bsum(m,'atk')+Math.floor(m.lv/2)+(m.cls==='전사'?2:0)-Math.floor((e.def+bsum(e,'def'))/2));
-    if(Math.random()<(m.cls==='도적'?0.12:0)+Math.max(0,m.st.luk-8)*0.01){ d*=2; log(`${J(m.name,'이','가')} 급소를 찔렀다!`,'gold'); efx(e,'slash',{dur:450,big:1}); fx('flash',0,0,{color:'255,240,210',dur:220}); shake(5,220); }
+    if(Math.random()<(m.cls==='도적'?0.12:0)+(m.crit||0)+Math.max(0,m.st.luk-8)*0.01){ d*=2; log(`${J(m.name,'이','가')} 급소를 찔렀다!`,'gold'); efx(e,'slash',{dur:450,big:1}); fx('flash',0,0,{color:'255,240,210',dur:220}); shake(5,220); }
     log(`${J(m.name,'이','가')} ${J(e.name,'을','를')} 베었다. ${d}의 피해.`); hurt(e,d); return true;
   }
   if(cm.act==='potion'){
@@ -843,11 +923,62 @@ function victory(){
   const c=S.combat, xp=c.enemies.reduce((s,e)=>s+e.xp,0), g=c.enemies.reduce((s,e)=>s+e.g,0), al=living(), each=Math.floor(xp/al.length);
   al.forEach(m=>m.xp+=each); S.gold+=g;
   c.enemies.forEach(e=>S.kills[e.id]=(S.kills[e.id]||0)+1);
+  if(S.realm==='unknown') S.kills.unknown=(S.kills.unknown||0)+c.enemies.length;
   log(`승리! 각자 경험치 ${each}, 금화 ${g}G를 얻었다.`,'gold');
   if(al.some(m=>m.xp>=need(m.lv))) log('(마을 여관에서 쉬면 레벨이 오를 동료가 있다.)','sys');
   endCombat();
-  if(c.boss){ S.bossDead=true; S.mode='won'; log('베르가스의 몸이 재가 되어 흩어진다. 룬의 빛이 꺼졌다.','gold'); return render(); }
+  if(c.boss && S.realm==='unknown'){ S.unk.bossDead=true; S.unkCleared=true; checkQuests(); return startEnding('reborn'); }
+  if(c.boss){ S.bossDead=true; grantUniques(); return startEnding('fall'); }
   checkQuests(); S.mode='dungeon'; render();
+}
+
+// ───────── 유니크 · 엔딩 · 2회차 · 환생 ─────────
+function grantUniques(){
+  S.loot=[];
+  for(const [cls,u] of Object.entries(UNIQUES)){
+    const m=S.party.find(x=>x.cls===cls && !x.gear.includes(u.id)); if(!m) continue;
+    m.gear.push(u.id); m.atkB+=u.atk||0; m.defB+=u.def||0; m.magB+=u.mag||0; m.crit=(m.crit||0)+(u.crit||0);
+    if(u.mp){ m.mmp+=u.mp; m.mp+=u.mp; }
+    S.loot.push(`${u.n} — ${m.name}`); log(`★ 유니크 전리품 「${u.n}」 — ${J(m.name,'이','가')} 손에 넣었다. (${u.d})`,'gold');
+  }
+}
+// 엔딩 장면들. sc = 캔버스에 그릴 장면, tx = 명령 창에 나올 글
+const END = {
+  fall:[
+    {sc:'kneel', tx:()=>`베르가스가 무릎을 꿇는다. 해골 왕관이 돌바닥을 구른다.${S.loot.length?'<br><br>'+S.loot.map(l=>`<span style="color:var(--gold)">★ ${l}</span>`).join('<br>'):''}`},
+    {sc:'swell', tx:()=>`그의 몸이 검붉게 부풀어 오른다.<br>「…나 혼자 가지는 않는다. 이 땅의 모든 숨과 함께 가겠다.」`},
+    {sc:'blast', tx:()=>`자폭. 흰 빛이 미궁을 삼키고, 땅 위의 리르가드까지 치솟는다.`},
+    {sc:'shield', tx:()=>`${J(S.party[0].name,'이','가')} 방패를 들어 올리고 동료들이 그 뒤로 몸을 던진다.<br>그 순간, 장막 위로 푸른 빛이 겹쳐졌다. 이 땅의 정령이 파티를 감쌌다.`},
+    {sc:'ruin', tx:()=>`지상으로 올라오자 리르가드는 잿더미였다.<br>여관 주인도, 대장장이도, 사제도, 영주도… 살아남은 것은 파티와 정령뿐이다.`},
+    {sc:'spirit', tx:()=>`정령: 「폐허 아래에 새 미궁이 열렸다. 들어갈 때마다 모양이 바뀌는, 이름 없는 것의 미궁이다.<br>내가 함께 가겠다. 길을 잃으면 나를 불러라.」`, last:'2회차 시작'},
+  ],
+  reborn:[
+    {sc:'unkdie', tx:()=>`이름 없는 자가 소리 없이 흩어진다. 그것이 무엇이었는지 끝내 아무도 알지 못했다.`},
+    {sc:'light', tx:()=>`미궁이 빛으로 녹아내린다. 정령이 마지막으로 속삭인다.<br>「다시 태어나라. 이번에는 다른 이야기로.」`},
+    {sc:'rebirth', tx:()=>`환생 — 파티는 기억의 조각만을 안고 처음으로 돌아간다.<br>다음 모험의 능력치 보너스 +${Math.min(5,(S.rebirths||0)+1)}`, last:'환생하여 처음부터'},
+  ],
+};
+function startEnding(kind){ S.mode='ending'; S.ending={kind,step:0}; UI.endT0=now(); UI.fadeIn=now(); FX.length=0; render(); }
+function endingNext(){
+  const E=END[S.ending.kind];
+  if(S.ending.step<E.length-1){ S.ending.step++; UI.endT0=now(); if(E[S.ending.step].sc==='blast') shake(10,900); render(); return; }
+  if(S.ending.kind==='fall') startCycle2(); else reincarnate();
+}
+function startCycle2(){
+  S.cycle=2; S.spirit=true; S.spiritUsed=false; S.realm='normal'; S.ending=null;
+  S.mode='town'; S.townView='main'; UI.scene='square'; UI.fadeIn=now();
+  S.party.forEach(m=>{ m.dead=false; m.hp=m.mhp; m.mp=m.mmp; m.bf=[]; });
+  delete S.quests.acc.q_boss; if(!S.quests.done.includes('q_boss')) S.quests.done.push('q_boss');
+  S.quests.acc.q_unk=0;
+  log('── 2회차 ──','round');
+  log('폐허가 된 리르가드. 무너진 미궁 입구 자리에 「?」 모양의 균열이 열려 있다.','mag');
+  log('정령이 남은 건물들에 희미한 빛을 깃들여, 여관·상점·사원은 그대로 쓸 수 있다.','sys');
+  render();
+}
+function reincarnate(){
+  const n=(S.rebirths||0)+1;
+  newGame(n);
+  log(`환생 ${n}회째. 전생의 기억이 능력치 보너스 +${rebirthBonus()}이 되었다.`,'gold'); render();
 }
 
 // ───────── 그리기 ─────────
@@ -904,7 +1035,7 @@ function marker(ch,a,b,d,t){
 const FX=[];      // 캔버스 이펙트: {k, x, y, t0, dur, ...}
 const PFX={};     // 파티 카드 이펙트: 파티 순번 → {k, txt, t}
 let shakeAmp=0, shakeEnd=0;
-function fx(k,x,y,o={}){ const e={k,x,y,t0:now(),dur:o.dur||700,...o}; if(['fire','burst','heal','buff','dark'].includes(k)) e.parts=Array.from({length:k==='dark'?40:18},()=>({a:Math.random()*Math.PI*2,v:0.4+Math.random(),r:1.5+Math.random()*2.5,dx:(Math.random()-0.5)})); FX.push(e); kick(); }
+function fx(k,x,y,o={}){ const e={k,x,y,t0:now(),dur:o.dur||700,...o}; if(['fire','burst','heal','buff','dark','spirit'].includes(k)) e.parts=Array.from({length:k==='dark'?40:18},()=>({a:Math.random()*Math.PI*2,v:0.4+Math.random(),r:1.5+Math.random()*2.5,dx:(Math.random()-0.5)})); FX.push(e); kick(); }
 function shake(a,ms){ if(reduce) return; shakeAmp=a; shakeEnd=now()+ms; kick(); }
 function pfx(m,k,txt){ const i=S.party.indexOf(m); if(i>=0) PFX[i]={k,txt,t:now()}; }
 // 적 위치 (이펙트를 그 위에 띄우기 위해)
@@ -938,6 +1069,8 @@ function drawFX(t){
       g.globalAlpha=0.25*(1-p); const gr=g.createLinearGradient(0,H,0,H*0.4); gr.addColorStop(0,`rgba(${col},.8)`); gr.addColorStop(1,`rgba(${col},0)`); g.fillStyle=gr; g.fillRect(0,H*0.4,W,H*0.6); }
     if(f.k==='dark'){ g.globalAlpha=0.55*Math.sin(p*Math.PI); g.fillStyle='#2a0a2e'; g.fillRect(0,0,W,H);
       f.parts.forEach(q=>{ const x=W*((q.a/7)%1), y=H-p*H*q.v; g.globalAlpha=(1-p); g.fillStyle=q.v>1?'#b04cff':'#5a1a7a'; g.beginPath(); g.arc(x,y,q.r*3,0,7); g.fill(); }); }
+    if(f.k==='spirit'){ const a=Math.sin(p*Math.PI); g.globalAlpha=0.7*a; const gr=g.createRadialGradient(W/2,H/2,5,W/2,H/2,W*0.6); gr.addColorStop(0,'rgba(200,235,255,.95)'); gr.addColorStop(1,'rgba(90,160,255,0)'); g.fillStyle=gr; g.fillRect(0,0,W,H);
+      f.parts.forEach(q=>{ const r=p*180*q.v; g.globalAlpha=a; g.fillStyle='#cfe9ff'; g.beginPath(); g.arc(W/2+Math.cos(q.a+p*3)*r,H/2+Math.sin(q.a+p*3)*r*0.6,q.r,0,7); g.fill(); }); }
     if(f.k==='flash'){ g.globalAlpha=0.35*(1-p); g.fillStyle=`rgb(${f.color})`; g.fillRect(0,0,W,H); }
     g.restore();
   }
@@ -966,7 +1099,7 @@ function drawView(t){
   gr=g.createRadialGradient(W/2,H*0.95,10,W/2,H*0.95,W*0.75); gr.addColorStop(0,`rgba(255,160,70,${flick})`); gr.addColorStop(1,'rgba(255,160,70,0)'); g.fillStyle=gr; g.fillRect(0,0,W,H);
   gr=g.createRadialGradient(W/2,H/2,W*0.22,W/2,H/2,W*0.72); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,.72)'); g.fillStyle=gr; g.fillRect(-10,-10,W+20,H+20);
   if(S.mode==='combat' && S.combat) drawEnemies(t);
-  else if(touch){
+  else if(touch && S.mode==='dungeon'){
     g.fillStyle='rgba(217,202,169,.4)'; g.font='28px "Gowun Batang",serif'; g.textAlign='center';
     g.fillText('‹',20,H/2+10); g.fillText('›',W-20,H/2+10); g.fillText('︿',W/2,H-12); g.textAlign='left';
   }
@@ -987,7 +1120,7 @@ function drawEnemies(t){
     g.save(); g.globalAlpha=(e.sleep?0.6:1)*(1-dp)*ent;
     // 그림자
     g.fillStyle='rgba(0,0,0,.55)'; g.beginPath(); g.ellipse(x,yb+2,th*0.32,th*0.07,0,0,7); g.fill();
-    g.shadowColor=e.boss?'rgba(220,40,30,.9)':hasBf(e,'weak')?'rgba(125,79,196,.9)':'rgba(163,36,29,.6)'; g.shadowBlur=e.boss?26:14;
+    g.shadowColor=e.unk?'rgba(150,90,235,.9)':e.boss?'rgba(220,40,30,.9)':hasBf(e,'weak')?'rgba(125,79,196,.9)':'rgba(163,36,29,.6)'; g.shadowBlur=e.boss?26:14;
     const flash = hitP<1 ? 1-hitP : 0;
     const drawn = drawSprite(g,'monsters/'+e.id,x+ox,yb+oy+dp*20,th*sc,t,{phase:e.ph,flash});
     if(!drawn) drawIcon(g,e.ic,x+ox,yb+oy-th*sc/2,th*sc,flash?'#ffffff':'#efe2c4','#5e3a2c');
@@ -1002,7 +1135,7 @@ function drawEnemies(t){
 }
 // 디아블로식 반투명 지도: 미궁 화면 위에 겹쳐 그린다. 파티가 늘 가운데
 function drawAutomap(){
-  const g=ctx, f=S.floor, rows=MAPS[f], n=rows.length, sz=Math.floor(Math.min((W-24)/rows[0].length,(H-44)/n));
+  const g=ctx, f=S.floor, rows=mapOf(f), n=rows.length, sz=Math.floor(Math.min((W-24)/rows[0].length,(H-44)/n));
   const ox=Math.round((W-rows[0].length*sz)/2), oy=Math.round((H-n*sz)/2)+8, ex=new Set(S.explored[f]);
   g.save();
   g.fillStyle='rgba(5,3,4,.45)'; g.fillRect(-10,-10,W+20,H+20);
@@ -1023,7 +1156,7 @@ function drawAutomap(){
   // 출발점(올라가는 계단)과 목표(내려가는 계단·보스방)는 처음부터 표시한다
   g.font=`${Math.round(sz*0.62)}px "Gowun Batang",serif`; g.textAlign='center'; g.textBaseline='middle';
   rows.forEach((row,y)=>[...row].forEach((ch,x)=>{
-    const mark = ch==='<'?'▲':ch==='>'?'▼':ch==='B'&&!S.bossDead?'✠':''; if(!mark) return;
+    const mark = ch==='<'?'▲':ch==='>'?'▼':ch==='B'&&!bossGone()?'✠':''; if(!mark) return;
     const seen=ex.has(`${x},${y}`);
     g.fillStyle = ch==='B' ? `rgba(224,87,63,${seen?1:.75})` : `rgba(233,223,198,${seen?1:.6})`;
     g.fillText(mark,ox+x*sz+sz/2,oy+y*sz+sz/2+1);
@@ -1032,8 +1165,8 @@ function drawAutomap(){
   g.fillStyle=css('--bad'); g.shadowColor=css('--bad'); g.shadowBlur=10; g.beginPath();
   g.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); g.lineTo(cx+Math.cos(a+2.5)*r,cy+Math.sin(a+2.5)*r); g.lineTo(cx+Math.cos(a-2.5)*r,cy+Math.sin(a-2.5)*r); g.fill();
   g.shadowBlur=0; g.textAlign='left'; g.textBaseline='alphabetic'; g.font='12px "Gowun Batang",serif'; g.fillStyle='rgba(217,202,169,.8)';
-  g.fillText(`지하 ${S.floor}층 지도`,12,20);
-  g.textAlign='right'; g.fillText(`▲ 올라가는 계단   ▼ 내려가는 계단${S.floor===3&&!S.bossDead?'   ✠ 마도왕':''}`,W-12,20);
+  g.fillText(`${S.realm==='unknown'?'알 수 없는 미궁':'지하'} ${S.floor}층 지도`,12,20);
+  g.textAlign='right'; g.fillText(`▲ 올라가는 계단   ▼ 내려가는 계단${S.floor===3&&!bossGone()?(S.realm==='unknown'?'   ✠ 이름 없는 자':'   ✠ 마도왕'):''}`,W-12,20);
   g.restore();
 }
 
@@ -1054,10 +1187,24 @@ let camX=0, bob=0;
 function tp(x,y,z,cz){ const dz=Math.max(0.3,z-cz), s=(W*0.5)/dz; return [W/2+(x-camX)*s, HZ+bob+(EYE-y)*s, s]; }
 function quad(pts,fill,stroke,lw=1){ const g=ctx; g.beginPath(); pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y)); g.closePath(); if(fill){ g.fillStyle=fill; g.fill(); } if(stroke){ g.strokeStyle=stroke; g.lineWidth=lw; g.stroke(); } }
 const ease=p=>p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
-const flick=(t,k=0)=>reduce?1:0.85+0.1*Math.sin(t/120+k)+0.05*Math.sin(t/53+k*2);
+const ruined = () => S && (S.cycle>=2 || UI.forceRuin);
+const flick=(t,k=0)=>(ruined()?0.1:1)*(reduce?1:0.85+0.1*Math.sin(t/120+k)+0.05*Math.sin(t/53+k*2));
+// 2회차에는 사람들이 모두 죽고 정령의 빛만 남았다
+TOWN.inn.rn='무너진 여관'; TOWN.shop.rn='버려진 상점'; TOWN.quests.rn='길드 게시판'; TOWN.gate.rn='알 수 없는 미궁'; TOWN.temple.rn='무너진 사원';
+TOWN.inn.rd='지붕이 반쯤 내려앉았다. 정령의 빛이 침상 하나를 지키고 있다.'; TOWN.shop.rd='주인은 없다. 계산대에 금화를 두고 물건을 가져간다.';
+TOWN.quests.rd='불에 그을린 게시판. 마지막으로 붙은 의뢰들이 아직 남아 있다.'; TOWN.gate.rd='무너진 지하묘지 입구에 보랏빛 균열이 일렁인다.'; TOWN.temple.rd='장미창이 깨진 사원. 무너진 제단에 정령이 빛을 모은다.';
+const tname = k => ruined() && TOWN[k].rn || TOWN[k].n;
+const tdesc = k => ruined() && TOWN[k].rd || TOWN[k].d;
+function drawEmbers(t){
+  if(reduce) return;
+  for(let i=0;i<34;i++){ const sp=0.025+0.012*(i%4), x=(i*53.7+Math.sin(t/700+i)*20+W)%W, y=H-((t*sp+i*37)%(H+20));
+    ctx.fillStyle=`rgba(255,${120+(i%5)*20},60,${0.35+0.4*((i*7)%10)/10})`; ctx.fillRect(x,y,2,2); }
+  for(let i=0;i<5;i++){ const x=(i*113+t*0.006*(i+1))%(W+120)-60, y=HZ-60-(i%3)*30; const gr=ctx.createRadialGradient(x,y,4,x,y,70); gr.addColorStop(0,'rgba(30,22,22,.45)'); gr.addColorStop(1,'rgba(30,22,22,0)'); ctx.fillStyle=gr; ctx.fillRect(x-70,y-70,140,140); }
+}
 function glow(x,y,r,rgb,a){ const gr=ctx.createRadialGradient(x,y,1,x,y,r); gr.addColorStop(0,`rgba(${rgb},${a})`); gr.addColorStop(1,`rgba(${rgb},0)`); ctx.fillStyle=gr; ctx.fillRect(x-r,y-r,r*2,r*2); }
 function drawSky(t){
-  const g=ctx, hz=HZ+bob; let gr=g.createLinearGradient(0,0,0,hz); gr.addColorStop(0,'#06040a'); gr.addColorStop(1,'#2e1b24'); g.fillStyle=gr; g.fillRect(-10,-10,W+20,hz+12);
+  const g=ctx, hz=HZ+bob, ru=ruined(); let gr=g.createLinearGradient(0,0,0,hz); gr.addColorStop(0,ru?'#120606':'#06040a'); gr.addColorStop(1,ru?'#5a2216':'#2e1b24'); g.fillStyle=gr; g.fillRect(-10,-10,W+20,hz+12);
+  if(ru) return;
   STARS.forEach(([x,y,b])=>{ g.fillStyle=`rgba(233,223,198,${0.2+0.5*b*(reduce?1:0.6+0.4*Math.sin(t/700+x))})`; g.fillRect(x,y,1.5,1.5); });
   const mx=W*0.8, my=46; glow(mx,my,64,'233,223,198',0.3);
   g.fillStyle='#e9dfc6'; g.beginPath(); g.arc(mx,my,14,0,7); g.fill();
@@ -1069,7 +1216,7 @@ function drawCathedral(cz,t){
   quad([P(-1.45,2.3),P(-1.3,3.9),P(-1.15,2.3)],'#110a0e',L); quad([P(1.15,2.3),P(1.3,3.9),P(1.45,2.3)],'#110a0e',L);
   const [rx,ry,s]=P(0,1.95), r=0.33*s, f=flick(t);
   glow(rx,ry,r*3,'176,40,58',0.3*f);
-  const gr=ctx.createRadialGradient(rx,ry,1,rx,ry,r); gr.addColorStop(0,'#ffcf7a'); gr.addColorStop(.5,'#b0283a'); gr.addColorStop(1,'#3b1450');
+  const gr=ctx.createRadialGradient(rx,ry,1,rx,ry,r); gr.addColorStop(0,ruined()?'#3a1a1c':'#ffcf7a'); gr.addColorStop(.5,ruined()?'#24100f':'#b0283a'); gr.addColorStop(1,ruined()?'#140a0e':'#3b1450');
   ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(rx,ry,r,0,7); ctx.fill();
   ctx.strokeStyle='rgba(15,8,10,.9)'; ctx.lineWidth=Math.max(1,s*0.02); ctx.beginPath();
   for(let i=0;i<8;i++){ const a=i*Math.PI/4; ctx.moveTo(rx,ry); ctx.lineTo(rx+Math.cos(a)*r,ry+Math.sin(a)*r); } ctx.stroke();
@@ -1099,8 +1246,9 @@ function drawHouse(side,k,cz,t){
   // 문, 또는 지하묘지 철문
   if(side===TOWN.gate.side && k===Math.floor(TOWN.gate.z)){
     const a=z0+0.2, b=z1-0.2; if(a<=za) return;
-    quad([P(0,a),P(0,b),P(1.3,b),P(1.3,a)],'#050304','rgba(163,36,29,.9)',2);
-    const [gx,gy,s]=P(0.5,(a+b)/2); glow(gx,gy,0.9*s,'200,40,30',0.4*f);
+    const ru=ruined(), pf=ru?0.85+0.15*Math.sin(t/200):f;
+    quad([P(0,a),P(0,b),P(1.3,b),P(1.3,a)],ru?'#12061e':'#050304',ru?'rgba(170,110,255,.9)':'rgba(163,36,29,.9)',2);
+    const [gx,gy,s]=P(0.5,(a+b)/2); glow(gx,gy,0.9*s,ru?'150,90,255':'200,40,30',0.45*pf);
     ctx.strokeStyle='rgba(95,85,80,.95)'; ctx.lineWidth=Math.max(1,2*sh); ctx.beginPath();
     for(let i=1;i<6;i++){ const z=a+(b-a)*i/6; Ln(P(0,z),P(1.3,z)); } ctx.stroke();
   } else { const a=zm-0.1, b=zm+0.1; if(a>za) quad([P(0,a),P(0,b),P(0.62,b),P(0.62,a)],c(36,23,16),'rgba(20,12,10,.9)'); }
@@ -1114,9 +1262,10 @@ function drawSign(key,cz,t){
   ctx.lineWidth=Math.max(1,s*0.012); ctx.beginPath(); ctx.moveTo(-w*0.3,0); ctx.lineTo(-w*0.3,cy-by-w/2); ctx.moveTo(w*0.3,0); ctx.lineTo(w*0.3,cy-by-w/2); ctx.stroke();
   ctx.translate(0,cy-by);
   ctx.fillStyle='#2a1c14'; ctx.fillRect(-w/2,-w/2,w,w); ctx.strokeStyle=css('--gold'); ctx.lineWidth=Math.max(1,s*0.014); ctx.strokeRect(-w/2,-w/2,w,w);
-  drawIcon(ctx,T.ic,0,0,w*0.8,'#f1e4c6','#a08a62');
+  if(key==='gate' && ruined()){ ctx.font=`700 ${w*0.7|0}px "Song Myung",serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#c9a6ff'; ctx.fillText('?',0,w*0.04); ctx.textBaseline='alphabetic'; }
+  else drawIcon(ctx,T.ic,0,0,w*0.8,'#f1e4c6','#a08a62');
   if(w>34){ ctx.font=`${Math.min(15,w*0.2)|0}px "Gowun Batang",serif`; ctx.textAlign='center'; ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.85)';
-    ctx.strokeText(T.n,0,w/2+16); ctx.fillStyle='#efe2c4'; ctx.fillText(T.n,0,w/2+16); }
+    ctx.strokeText(tname(key),0,w/2+16); ctx.fillStyle='#efe2c4'; ctx.fillText(tname(key),0,w/2+16); }
   ctx.restore();
 }
 function drawLamp(x,z,cz,t){
@@ -1124,7 +1273,7 @@ function drawLamp(x,z,cz,t){
   const [px,py]=tp(x,0,z,cz), [,ty,s]=tp(x,1.55,z,cz), f=flick(t,x*5+z);
   ctx.strokeStyle='#120b0a'; ctx.lineWidth=Math.max(1,s*0.045); ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,ty); ctx.stroke();
   glow(px,ty,0.95*s*f,'255,175,90',0.5);
-  ctx.fillStyle='#ffd08a'; ctx.fillRect(px-s*0.05,ty-s*0.08,s*0.1,s*0.13);
+  ctx.fillStyle=ruined()?'#2a1a14':'#ffd08a'; ctx.fillRect(px-s*0.05,ty-s*0.08,s*0.1,s*0.13);
 }
 function drawTown(t){
   const A=UI.anim, p=A?ease(Math.min(1,(t-A.t0)/A.dur)):0, cz=A?p*A.dz:0, g=ctx;
@@ -1141,6 +1290,7 @@ function drawTown(t){
     if(k%3===1){ drawLamp(-1.3,k+0.5,cz,t); drawLamp(1.3,k+0.5,cz,t); }
     for(const key in TOWN) if(TOWN[key].side && Math.floor(TOWN[key].z)===k) drawSign(key,cz,t);
   }
+  if(ruined()) drawEmbers(t);
   gr=g.createLinearGradient(0,HZ-40,0,HZ+70); gr.addColorStop(0,'rgba(70,50,60,0)'); gr.addColorStop(.5,'rgba(70,50,60,.28)'); gr.addColorStop(1,'rgba(70,50,60,0)'); g.fillStyle=gr; g.fillRect(0,HZ-40,W,110);
   gr=g.createRadialGradient(W/2,H/2,W*0.25,W/2,H/2,W*0.75); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,.6)'); g.fillStyle=gr; g.fillRect(-10,-10,W+20,H+20);
   camX=0; bob=0;
@@ -1183,7 +1333,8 @@ function drawFacadeView(fac,t){
   g.fillStyle='#2a1a12'; g.fillRect(W/2-hw,dt+hw,hw*0.55,base-dt-hw); g.fillRect(W/2+hw*0.45,dt+hw,hw*0.55,base-dt-hw);
   // 현판
   g.fillStyle='#1c120e'; g.fillRect(W/2-92,dt-36,184,28); g.strokeStyle=css('--gold'); g.lineWidth=1.5; g.strokeRect(W/2-92,dt-36,184,28);
-  g.font='18px "Song Myung","Gowun Batang",serif'; g.textAlign='center'; g.fillStyle=css('--gold'); g.fillText(T.n,W/2,dt-15); g.textAlign='left';
+  g.font='18px "Song Myung","Gowun Batang",serif'; g.textAlign='center'; g.fillStyle=css('--gold'); g.fillText(tname(fac),W/2,dt-15); g.textAlign='left';
+  if(ruined()){ drawEmbers(t); glow(W/2,dt+30,90,'120,190,255',0.18+0.06*Math.sin(t/300)); }
   // 걸린 간판
   if(!temple){ const sx=Rr+26, sy=top+70, w=46, sw=reduce?0:Math.sin(t/900)*0.05;
     g.strokeStyle='#1a1210'; g.lineWidth=4; g.beginPath(); g.moveTo(Rr,top+30); g.lineTo(sx+10,top+30); g.stroke();
@@ -1205,10 +1356,10 @@ function goTo(fac){
   S.townView='main'; UI.scene='square'; UI.confirm=null;
   UI.anim={t0:now(), dur:reduce?200:1100, dz:Math.max(0,T.z-(fac==='temple'?3:1.2)), side:T.side, then:()=>{
     UI.fadeIn=now();
-    if(fac==='gate'){ log(T.d,'sys'); return enterDungeon(); }
+    if(fac==='gate'){ log(tdesc('gate'),'sys'); return enterDungeon(); }
     UI.scene='facade'; UI.fac=fac; S.townView=fac;
     if(fac==='inn'){ UI.slots=null; refreshSlots(); }
-    log(`${T.n}. ${T.d}`,'sys'); render();
+    log(`${tname(fac)}. ${tdesc(fac)}`,'sys'); render();
   }};
   busy=true; render();
 }
@@ -1218,15 +1369,56 @@ function closeModal(){
 }
 const modalOpen = () => S && S.mode==='town' && S.townView!=='main' && !UI.anim;
 function toggleMap(){ UI.map=!UI.map; try{ localStorage.setItem('lirgard-map',UI.map?'1':'0'); }catch(e){} render(); }
+function drawWisp(x,y,r,t){
+  const b=reduce?0:Math.sin(t/400)*r*0.15;
+  glow(x,y+b,r*3.2,'120,190,255',0.35); glow(x,y+b,r*1.4,'210,240,255',0.8);
+  ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(x,y+b,r*0.35,0,7); ctx.fill();
+  for(let i=0;i<8;i++){ const a=t/900*(i%2?1:-1)+i*0.8, rr=r*(1.3+0.4*Math.sin(t/500+i)); ctx.fillStyle='rgba(200,235,255,.8)'; ctx.fillRect(x+Math.cos(a)*rr,y+b+Math.sin(a)*rr*0.7,2,2); }
+}
+function drawPartyRow(yb,th,t,alpha=1){
+  const al=S.party; ctx.save(); ctx.globalAlpha=alpha;
+  al.forEach((m,i)=>{ const x=W/2+(i-(al.length-1)/2)*th*0.75; if(!drawSprite(ctx,'party/'+m.cls,x,yb,th,t,{phase:i})) drawIcon(ctx,CLS[m.cls].ic,x,yb-th/2,th,'#efe2c4','#8a7a60'); });
+  ctx.restore();
+}
+function drawEnding(t){
+  const g=ctx, st=END[S.ending.kind][S.ending.step], e=(t-(UI.endT0||t))/1000, sc=st.sc;
+  if(sc==='kneel'||sc==='swell'||sc==='unkdie'){
+    drawView(t); g.fillStyle='rgba(5,3,4,.45)'; g.fillRect(0,0,W,H);
+    if(sc==='kneel'){ g.save(); g.shadowColor='rgba(220,40,30,.8)'; g.shadowBlur=24; if(!drawSprite(g,'monsters/boss',W/2,H*0.86+Math.min(1,e)*12,150,t,{frame:0})) drawIcon(g,'lorc_crowned-skull',W/2,H*0.6,150,'#efe2c4','#5e3a2c'); g.restore(); }
+    if(sc==='swell'){ const k=Math.min(2.2,e), th=150*(1+k*0.22)+(reduce?0:Math.sin(e*22)*5);
+      glow(W/2,H*0.55,120+k*80,'230,40,20',Math.min(0.75,0.25+k*0.25));
+      g.save(); g.shadowColor='#ff3018'; g.shadowBlur=30+k*20; drawSprite(g,'monsters/boss',W/2,H*0.9,th,t,{frame:Math.floor(e*8)%3,flash:Math.max(0,Math.sin(e*10))*Math.min(1,k*0.5)}); g.restore(); }
+    if(sc==='unkdie'){ const a=Math.max(0,1-e/2.5); g.save(); g.globalAlpha=a; g.shadowColor='rgba(150,90,235,.9)'; g.shadowBlur=30; drawSprite(g,'monsters/boss',W/2,H*0.86+e*14,170,t,{frame:0,flash:0.3}); g.restore();
+      for(let i=0;i<40;i++){ const q=(e*0.5+i/40)%1; g.fillStyle=`rgba(180,140,255,${(1-q)*0.8})`; g.fillRect(W/2+Math.sin(i*2.3)*90*q,H*0.6-q*160+Math.cos(i)*30,2,2); } }
+  }
+  if(sc==='blast'){
+    g.fillStyle='#fff7ea'; g.fillRect(-10,-10,W+20,H+20);
+    const fade=Math.min(1,e/1.6); g.fillStyle=`rgba(40,8,4,${fade*0.85})`; g.fillRect(-10,-10,W+20,H+20);
+    for(let i=0;i<4;i++){ const r=((e*260)+i*90)%520; g.strokeStyle=`rgba(255,${200-i*30},150,${Math.max(0,1-r/520)})`; g.lineWidth=6-i; g.beginPath(); g.arc(W/2,H/2,r,0,7); g.stroke(); }
+  }
+  if(sc==='shield'){
+    g.fillStyle='#07060c'; g.fillRect(-10,-10,W+20,H+20);
+    glow(W/2,H*0.5,W*0.7,'200,60,30',0.25);
+    const dr=150+(reduce?0:Math.sin(t/300)*4); const gr=g.createRadialGradient(W/2,H*0.95,10,W/2,H*0.95,dr); gr.addColorStop(0,'rgba(120,190,255,.05)'); gr.addColorStop(.85,'rgba(120,190,255,.28)'); gr.addColorStop(1,'rgba(230,200,120,.6)');
+    g.fillStyle=gr; g.beginPath(); g.arc(W/2,H*0.95,dr,Math.PI,0); g.fill(); g.strokeStyle='rgba(230,210,150,.8)'; g.lineWidth=2; g.stroke();
+    drawPartyRow(H*0.93,62,t); drawWisp(W/2,H*0.28,16,t);
+  }
+  if(sc==='ruin'||sc==='spirit'){ UI.forceRuin=true; drawTown(t); UI.forceRuin=false; if(sc==='spirit') drawWisp(W/2,H*0.42,22,t); }
+  if(sc==='light'){ g.fillStyle='#0a0710'; g.fillRect(-10,-10,W+20,H+20); const r=Math.min(1,e/2.5); glow(W/2,H/2,60+r*420,'255,240,210',0.4+r*0.6); drawWisp(W/2,H*0.5,18,t); }
+  if(sc==='rebirth'){ g.fillStyle='#05040a'; g.fillRect(-10,-10,W+20,H+20);
+    STARS.forEach(([x,y,b])=>{ g.fillStyle=`rgba(233,223,198,${0.3+0.5*b})`; g.fillRect(x,(y*2)%H,1.5,1.5); });
+    glow(W/2,H*0.55,170,'255,220,160',0.35); drawPartyRow(H*0.75-Math.min(40,e*10),58,t,0.95); }
+}
 function drawFrame(t){
-  if(S.mode==='town'){ if(UI.scene==='facade' && UI.fac && !UI.anim) drawFacadeView(UI.fac,t); else drawTown(t); }
+  if(S.mode==='ending'){ drawEnding(t); }
+  else if(S.mode==='town'){ if(UI.scene==='facade' && UI.fac && !UI.anim) drawFacadeView(UI.fac,t); else drawTown(t); }
   else drawView(t);
   if(UI.fadeIn && t-UI.fadeIn<450){ ctx.fillStyle=`rgba(0,0,0,${1-(t-UI.fadeIn)/450})`; ctx.fillRect(0,0,W,H); }
   if(UI.anim){ const p=(t-UI.anim.t0)/UI.anim.dur; if(p>0.75){ ctx.fillStyle=`rgba(0,0,0,${Math.min(1,(p-0.75)/0.25)})`; ctx.fillRect(0,0,W,H); } }
 }
 // 마을·미궁·전투 화면은 매 프레임 다시 그린다 (촛불, 몬스터 움직임, 이펙트, 걷기)
 let raf=0;
-const animated = () => S && ['dungeon','combat','town'].includes(S.mode);
+const animated = () => S && ['dungeon','combat','town','ending'].includes(S.mode);
 function loop(t){
   raf=0; if(!animated() || document.hidden) return;
   if(UI.anim && t-UI.anim.t0>=UI.anim.dur){ const f=UI.anim.then; UI.anim=null; busy=false; f(); }
@@ -1249,7 +1441,7 @@ function portrait(m){
 }
 
 function placeHTML(){
-  if(S.mode==='title') return hero('lorc_candle-skull','리르가드의 미궁',`<p>변경의 마을 아래로 끝없이 이어진 지하묘지. 마도왕 베르가스가 그 가장 깊은 곳에서 죽은 자들을 부리고 있다.</p><p class="muted">새 파티를 꾸리거나, 여관에 남겨 둔 모험 기록부를 펼친다.</p><p class="store">${Store.label()}</p>`);
+  if(S.mode==='title') return hero('lorc_candle-skull','리르가드의 미궁',`<p>변경의 마을 아래로 끝없이 이어진 지하묘지. 마도왕 베르가스가 그 가장 깊은 곳에서 죽은 자들을 부리고 있다.</p><p class="muted">새 파티를 꾸리거나, 여관에 남겨 둔 모험 기록부를 펼친다. 마도왕을 쓰러뜨리면 이야기는 2회차로, 그 너머의 미궁을 넘으면 환생으로 이어진다.</p><p class="store">${Store.label()}</p>`);
   if(S.mode==='create') return createHTML();
   if(S.mode==='won') return hero('lorc_gothic-cross','귀환',`<p>마을 사람들이 광장에 모였다. 영주가 직접 서약의 검을 건넨다. 리르가드의 미궁은 이제 조용하다.</p>`);
   if(S.mode==='dead') return hero('lorc_gothic-cross','전멸',`<p>파티의 횃불이 꺼졌다. 마지막으로 기록부에 남긴 순간부터 다시 시작할 수 있다.</p>`);
@@ -1271,7 +1463,7 @@ function modalHTML(){
   const v=S.townView;
   if(v==='inn'){
     const al=living().length, ups=living().filter(m=>m.xp>=need(m.lv)).map(m=>m.name);
-    return mHead(TOWN.inn.ic,'어부의 잔 · 여관','"레벨은 푹 자고 일어나야 오르는 법이지."')+`<div class="mbody">
+    return mHead(TOWN.inn.ic,ruined()?'무너진 여관':'어부의 잔 · 여관',ruined()?'정령: 「여기서 쉬어라. 내가 지켜보마.」 (공물로 금화를 바친다)':'"레벨은 푹 자고 일어나야 오르는 법이지."')+`<div class="mbody">
       <div class="msec">휴식</div>
       ${mRow('객실','HP·MP 모두 회복, 독·저주 해제, 레벨 업',`${al*10}G`,B('객실에서 잔다','inn','room',{dis:S.gold<al*10,primary:1}))}
       <p class="hint">${ups.length?`레벨이 오를 수 있는 동료: ${ups.join(', ')}`:'지금 레벨이 오를 동료는 없다.'}</p>
@@ -1290,14 +1482,14 @@ function modalHTML(){
     else {
       const rows=[];
       if(S.potions) rows.push(mRow('치유 물약',`지금 ${S.potions}개`,'12G',B('1개 판다','sell','potion')));
-      S.party.forEach((m,i)=>m.gear.forEach(id=>{ const it=SHOP.find(s=>s.id===id); rows.push(mRow(it.n,`${m.name}의 장비 · ${it.d}`,`${Math.floor(it.p/2)}G`,B('판다','sell',`${id}:${i}`))); }));
+      S.party.forEach((m,i)=>m.gear.forEach(id=>{ const it=SHOP.find(s=>s.id===id); if(!it) return; rows.push(mRow(it.n,`${m.name}의 장비 · ${it.d}`,`${Math.floor(it.p/2)}G`,B('판다','sell',`${id}:${i}`))); }));
       list=rows.join('')||'<p class="hint" style="padding:14px 0">팔 물건이 없다.</p>';
     }
-    return mHead(TOWN.shop.ic,'볼칸 상회','"돈 있으면 사고, 없으면 미궁에서 벌어 와!"')+`<div class="mbody">${tabs}${list}</div>`;
+    return mHead(TOWN.shop.ic,ruined()?'버려진 상점':'볼칸 상회',ruined()?'주인은 없다. 계산대에 금화를 두고 물건을 가져간다.':'"돈 있으면 사고, 없으면 미궁에서 벌어 와!"')+`<div class="mbody">${tabs}${list}</div>`;
   }
   if(v==='quests'){
     const full=sideActive().length>=QMAX;
-    const rows=QUESTS.filter(q=>!q.main && !S.quests.done.includes(q.id)).map(q=>{
+    const rows=QUESTS.filter(q=>!q.main && (q.cyc||1)<=S.cycle && !S.quests.done.includes(q.id)).map(q=>{
       const acc=q.id in S.quests.acc, ready=S.quests.ready.includes(q.id);
       const reward=[`${q.gold}G`, q.xp?`경험치 ${q.xp}`:'', q.potions?`물약 ${q.potions}`:''].filter(Boolean).join(' · ');
       const btn = ready ? B('보고하고 보수를 받는다','claim',q.id,{primary:1})
@@ -1311,7 +1503,7 @@ function modalHTML(){
   if(v==='temple'){
     const dead=S.party.map((m,i)=>[m,i]).filter(([m])=>m.dead);
     const sick=S.party.map((m,i)=>[m,i]).filter(([m])=>!m.dead&&['poison','curse','weak'].some(k=>hasBf(m,k)));
-    return mHead(TOWN.temple.ic,'카다르 사원','"헌금만 충분하다면, 신께서는 영혼을 돌려보내 주십니다."')+`<div class="mbody">
+    return mHead(TOWN.temple.ic,ruined()?'무너진 사원':'카다르 사원',ruined()?'정령이 무너진 제단에 빛을 모은다. 공물을 바치면 영혼을 불러온다.':'"헌금만 충분하다면, 신께서는 영혼을 돌려보내 주십니다."')+`<div class="mbody">
       <div class="msec">부활</div>
       ${dead.map(([m,i])=>mRow(m.name,`${m.race} ${m.cls} Lv${m.lv} · HP 1로 되살아난다`,`${60*m.lv}G`,B('되살린다','rez',i,{dis:S.gold<60*m.lv,primary:1}))).join('')||'<p class="hint" style="padding:8px 0">쓰러진 동료가 없다.</p>'}
       <div class="msec">정화</div>
@@ -1325,7 +1517,8 @@ function modalHTML(){
 function cmdHTML(){
   if(S.mode==='title') return `<div class="btns">${B('새 모험을 시작한다','new','',{wide:1,primary:1})}</div><p class="prompt">이어하기</p><div class="btns">${slotButtons('load')}</div>`;
   if(S.mode==='dead') return `<p class="prompt">어느 기록부터 다시 할까?</p><div class="btns">${slotButtons('load')}${B('타이틀로','title','',{wide:1})}</div>`;
-  if(S.mode==='won') return `<div class="end"><h2 style="color:var(--gold)">서약 완수</h2><p>파티는 서약의 검을 받고 리르가드의 전설이 되었다.</p>${B('타이틀로','title')}</div>`;
+  if(S.mode==='ending'){ const E=END[S.ending.kind], st=E[S.ending.step];
+    return `<p class="lbl">${S.ending.kind==='fall'?'1회차 종장':'환생'} · ${S.ending.step+1}/${E.length}</p><p style="margin:0;font-size:16px;line-height:1.75">${st.tx()}</p><div class="btns">${B(st.last||'다음 ▸','next','',{primary:1,wide:!!st.last})}</div>`; }
   if(S.mode==='create'){
     const n=S.party.length;
     return `<p class="prompt">${n?`등록된 모험가 ${n}명. ${n<4?'더 등록하거나 바로 출발할 수 있다.':'파티가 완성되었다.'}`:'아직 등록된 모험가가 없다.'}</p>
@@ -1334,10 +1527,10 @@ function cmdHTML(){
   }
   if(S.mode==='town'){
     if(UI.anim) return `<p class="prompt muted">…걸어가는 중…</p>`;
-    const ready=S.quests.ready.length, here=TOWN[S.townView];
+    const ready=S.quests.ready.length, here=TOWN[S.townView], ru=ruined();
     const go=(k,label,o={})=>B(label,'go',k,o);
-    return `<p class="prompt">${here?`${here.n}에 와 있다.`:'어디로 갈까?'}</p>
-      <div class="btns">${go('gate','미궁으로 내려간다',{wide:1,primary:1})}${go('quests','의뢰 게시판',{sub:ready?`보고 ${ready}`:''})}${go('inn','여관')}${go('shop','상점')}${go('temple','사원')}${B('타이틀로','quit')}</div>`;
+    return `<p class="prompt">${here?`${tname(S.townView)}에 와 있다.`:ru?'폐허가 된 리르가드. 어디로 갈까?':'어디로 갈까?'}</p>
+      <div class="btns">${go('gate',ru?'? 알 수 없는 미궁':'미궁으로 내려간다',{wide:1,primary:1,sub:ru?'들어갈 때마다 바뀐다':''})}${go('quests','의뢰 게시판',{sub:ready?`보고 ${ready}`:''})}${go('inn','여관')}${go('shop','상점')}${go('temple','사원')}${B('타이틀로','quit')}</div>`;
   }
   if(S.mode==='dungeon'){
     const ch=cell(S.x,S.y);
@@ -1345,7 +1538,7 @@ function cmdHTML(){
       : ch==='>' ? B('▼ 아래층으로','stairs','',{primary:1}) : ch==='T' ? B('상자 열기','chest','',{primary:1}) : '<span></span>';
     const pr=S.party.find(m=>m.cls==='승려'&&!m.dead&&m.mp>=1);
     return `<div class="pad">${B('↶ 왼쪽','mv','L')}${B('▲ 전진','mv','F')}${B('↷ 오른쪽','mv','R')}${B('⟲ 뒤돌기','mv','U')}${B('▼ 후퇴','mv','B')}${ctxBtn}</div>
-      <div class="btns">${B(UI.map?'지도 끄기':'지도 켜기','map','',{sub:touch?'':'M'})}${B('사나 (치유 주문)','heal','spell',{dis:!pr||!living().some(m=>m.hp<m.mhp),sub:pr?`${pr.name} MP ${pr.mp}`:''})}${B('치유 물약','heal','potion',{dis:!S.potions||!wounded(),sub:`${S.potions}개`})}</div>
+      <div class="btns">${S.spirit?B('✧ 정령','spirit','',{dis:S.spiritUsed,primary:!S.spiritUsed,sub:S.spiritUsed?'잠듦':'이 층 입구로'}):''}${B(UI.map?'지도 끄기':'지도 켜기','map','',{sub:touch?'':'M'})}${B('사나 (치유 주문)','heal','spell',{dis:!pr||!living().some(m=>m.hp<m.mhp),sub:pr?`${pr.name} MP ${pr.mp}`:''})}${B('치유 물약','heal','potion',{dis:!S.potions||!wounded(),sub:`${S.potions}개`})}</div>
       <p class="keys">${touch?'시야 탭: 왼쪽 좌회전 · 가운데 전진 · 오른쪽 우회전 · 아래로 쓸기 뒤돌기':'W A S D 이동 · Q 뒤돌기 · M 지도 · 숫자 1–9 버튼'}</p>`;
   }
   // 전투
@@ -1381,6 +1574,7 @@ function createHTML(){
       <div class="chips">${Object.keys(CLS).map(c=>{ const [k,v]=Object.entries(CLS[c].req)[0];
         return chip(c,'cls',c,c===d.cls,!meetsReq(c,st),`${SNAME[k]} ${v}`,CLS[c].ic); }).join('')}</div>
       <p class="hint">${d.cls?CLS[d.cls].d:'요구 능력치를 채우면 직업을 고를 수 있다.'}</p></div>
+    ${S.rebirths?`<p class="hint" style="color:var(--gold)">환생 ${S.rebirths}회 · 전생의 기억으로 보너스 포인트 +${rebirthBonus()}</p>`:''}
     <div class="fld"><button class="btn wide primary" id="regbtn" data-a="register" data-v=""${prob?' disabled':''}>등록부에 올린다</button>
       <p class="hint" id="regwhy">${prob}</p></div>
   </div>`;
@@ -1405,6 +1599,7 @@ function partyHTML(){
       <span class="tag">${m.dead?'사망':m.guard?'방어':ready?'Lv↑ 가능':`다음 ${need(m.lv)-m.xp}`}</span>
       <div class="row"><div>HP ${m.hp}/${m.mhp}<div class="bar${hpP<30?' low':''}"><i style="width:${hpP}%"></i></div></div>
       <div>${m.mmp?`MP ${m.mp}/${m.mmp}<div class="bar mp"><i style="width:${mpP}%"></i></div>`:'<span class="muted">—</span>'}</div></div>
+      ${m.gear.some(id=>id.startsWith('u_'))?`<div class="bfs">${m.gear.filter(id=>id.startsWith('u_')).map(id=>`<span class="bf good">★ ${uniqueById(id).n}</span>`).join('')}</div>`:''}
       ${bfChips(m)}${live?`<span class="ftxt ${p.k}" style="animation-delay:-${el}ms">${p.txt}</span>`:''}
     </div>`;}).join('');
 }
@@ -1417,13 +1612,15 @@ function trackerHTML(){
 function render(){
   const inView = animated();
   const here = S.mode==='town' && UI.scene==='facade' && TOWN[UI.fac];
-  const where = S.mode==='town' ? (here ? here.n : '리르가드 광장') : ({create:'모험가 길드',won:'리르가드 마을',dead:'미궁 속'}[S.mode] || `지하 ${S.floor}층 · ${DIRS[S.dir]}쪽`);
-  $('#hud').innerHTML = S.mode==='title' ? '' : `<span>장소 <b>${where}</b></span><span>금화 <b class="g">${S.gold}G</b></span><span>물약 <b>${S.potions}</b></span>`;
+  const where = S.mode==='town' ? (here ? tname(UI.fac) : ruined()?'리르가드 폐허':'리르가드 광장')
+    : ({create:'모험가 길드',ending:'—',dead:'미궁 속'}[S.mode] || `${S.realm==='unknown'?'알 수 없는 미궁':'지하'} ${S.floor}층 · ${DIRS[S.dir]}쪽`);
+  const tag = [S.cycle>=2?'2회차':'', S.rebirths?`환생 ${S.rebirths}`:''].filter(Boolean).map(x=>`<span><b class="g">${x}</b></span>`).join('');
+  $('#hud').innerHTML = S.mode==='title' ? '' : `${tag}<span>장소 <b>${where}</b></span><span>금화 <b class="g">${S.gold}G</b></span><span>물약 <b>${S.potions}</b></span>`;
   view.hidden=!inView; $('#place').hidden=inView; $('#loc').hidden=!inView;
-  $('#viewcap').textContent = {title:'서장',create:'등록소',town:'마을',won:'마을',dead:'종막',combat:'전투'}[S.mode] || '시야';
+  $('#viewcap').textContent = {title:'서장',create:'등록소',town:'마을',ending:'종장',dead:'종막',combat:'전투'}[S.mode] || '시야';
   if(inView){ drawFrame(now()); kick(); } else $('#place').innerHTML=placeHTML();
   const ch=S.mode==='dungeon'?cell(S.x,S.y):'';
-  $('#loc').textContent = S.mode==='town' ? (here ? `${here.n} 앞. ${here.d}` : '리르가드 광장. 왼쪽에 여관과 길드, 오른쪽에 상점과 지하묘지 입구, 길 끝에 사원이 보인다.')
+  $('#loc').textContent = S.mode==='ending' ? '' : S.mode==='town' ? (here ? `${tname(UI.fac)} 앞. ${tdesc(UI.fac)}` : ruined() ? '잿더미가 된 리르가드. 불씨가 날린다. 오른쪽 무너진 입구 자리에 보랏빛 「?」 균열이 열려 있다.' : '리르가드 광장. 왼쪽에 여관과 길드, 오른쪽에 상점과 지하묘지 입구, 길 끝에 사원이 보인다.')
     : S.mode==='combat' ? '적과 마주쳤다.'
     : ch==='T'?'발밑에 보물상자가 있다.':ch==='<'?'올라가는 계단 위에 서 있다.':ch==='>'?'내려가는 계단 앞에 서 있다.':`좌표 ${S.x}·${S.y}`;
   $('#party').innerHTML=partyHTML();
@@ -1451,6 +1648,7 @@ function dispatch(a,v){
   if(busy) return;
   if(a==='title') return toTitle();
   if(a==='new') return newGame();
+  if(a==='next') return endingNext();
   if(a==='load') return loadFrom(+v);
   if(a==='save') return saveTo(+v);
   if(a==='cancel'){ UI.confirm=null; return render(); }
@@ -1463,6 +1661,7 @@ function dispatch(a,v){
   if(a==='sell') return sell(v);
   if(a==='cure') return cure(+v);
   if(a==='map') return toggleMap();
+  if(a==='spirit') return useSpirit();
   if(a==='accept') return acceptQuest(v);
   if(a==='claim') return claimQuest(v);
   if(a==='enter') return enterDungeon();
