@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>리르가드의 미궁</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +21,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{background:var(--bg)}
-body{background:radial-gradient(120% 70% at 50% 0%,#24181a 0%,var(--bg) 62%) var(--bg);color:var(--line);font:15px/1.65 var(--f-body);min-height:100%;
+body{margin:0;-webkit-text-size-adjust:100%;text-size-adjust:100%;background:radial-gradient(120% 70% at 50% 0%,#24181a 0%,var(--bg) 62%) var(--bg);color:var(--line);font:15px/1.65 var(--f-body);min-height:100%;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:1120px;margin:0 auto;padding-block:18px 28px;display:grid;gap:20px}
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px;border-bottom:1px solid #3a2e2a;padding-bottom:12px}
@@ -38,7 +43,7 @@ h1{font:400 clamp(26px,4.2vw,40px)/1.1 var(--f-display);margin:0;letter-spacing:
 .cap{position:absolute;top:-.95em;left:20px;background:var(--bg);padding:0 10px;font:15px var(--f-display);letter-spacing:.32em;color:var(--gold)}
 canvas{display:block;width:100%;height:auto;max-width:100%;background:#050304}
 #view{aspect-ratio:480/300;cursor:pointer}
-.place{min-height:210px;display:grid;gap:12px;align-content:start}
+.place{min-height:210px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start}
 .place .hero{display:flex;gap:16px;align-items:center}
 .place .hero svg{width:72px;height:72px;flex:none;fill:var(--line);filter:drop-shadow(0 0 10px rgba(163,36,29,.55))}
 .place h2{font:400 26px/1.2 var(--f-display);margin:0;color:var(--gold);text-wrap:balance}
@@ -170,8 +175,8 @@ footer a{color:var(--dim)}
 html.title #partybox,html.title #logbox,html.title #recent{display:none}
 html.title .grid{grid-template-areas:"view cmd";grid-template-rows:auto}
 /* 등록소 */
-.cf{display:grid;gap:16px}
-.fld{display:grid;gap:8px}
+.cf{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.fld{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
 .lbl{font:13px var(--f-display);letter-spacing:.24em;color:var(--dim)}
 .lbl.sp{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;letter-spacing:.1em}
 .lbl.sp b{color:var(--line);font:700 15px var(--f-body)}.lbl.sp b.g{color:var(--gold)}
@@ -189,7 +194,7 @@ html.title .grid{grid-template-areas:"view cmd";grid-template-rows:auto}
 .chip:focus-visible,.mini:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .chip:disabled{opacity:.35;cursor:default}
 .hint{margin:0;font-size:13px;color:var(--dim)}
-.stats{display:grid;gap:4px;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;font-variant-numeric:tabular-nums}
 .st{display:grid;grid-template-columns:4.2em 2em auto minmax(0,1fr) 2em;gap:10px;align-items:center}
 .st b{text-align:right}
 .st .md{font-size:12px;color:var(--gold)}
@@ -201,6 +206,11 @@ html.title .grid{grid-template-areas:"view cmd";grid-template-rows:auto}
 .sbar i{display:block;height:100%;background:var(--dim)}
 .sbar i.add{background:var(--gold)}
 .stline{font-size:12px;color:var(--dim)}
+.pm.cpm{grid-template-columns:44px minmax(0,1fr)}
+.pm.cpm .row{grid-column:2;grid-template-columns:minmax(0,1fr);gap:0}
+.pm.cpm .adj{grid-column:2;justify-content:flex-start;gap:6px}
+.pm.cpm .adj .mini{width:30px;height:30px}
+.pm.cpm .pt{grid-row:1/4;align-self:start}
 .btn,.chip,.mini,#view{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .logbtn{display:none;font:14px var(--f-body);color:var(--line);background:transparent;border:1px solid var(--dim);padding:4px 12px;min-height:34px;cursor:pointer}
 .logbtn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
@@ -1964,9 +1974,9 @@ function partyHTML(){
   if(!S.party.length) return `<p class="muted">${S.mode==='create'?'빈 등록부. 왼쪽에서 첫 모험가를 만들어 보자.':'아직 파티가 없다.'}</p>`;
   const row=i=>i===0?'<div class="rowlbl">전열</div>':i===2?'<div class="rowlbl">후열</div>':'';
   if(S.mode==='create') return S.party.map((m,i)=>`${row(i)}
-      <div class="pm">${portrait(m)}<span class="nm">${m.name} <span>${m.race} ${m.cls}</span></span>
-        <span class="adj"><button class="mini" data-a="up" data-v="${i}" aria-label="${m.name} 앞으로"${i?'':' disabled'}>▲</button><button class="rdel" data-a="kick" data-v="${i}" aria-label="${m.name} 삭제">삭제</button></span>
-        <div class="row"><div>HP ${m.mhp}${m.mmp?` · MP ${m.mmp}`:''}</div><div class="stline">${STATS.map(([k,n])=>`${n[0]}${m.st[k]}`).join(' ')}</div></div></div>`).join('');
+      <div class="pm cpm">${portrait(m)}<span class="nm">${m.name} <span>${m.race} ${m.cls}</span></span>
+        <div class="row"><div>HP ${m.mhp}${m.mmp?` · MP ${m.mmp}`:''}</div><div class="stline">${STATS.map(([k,n])=>`${n[0]}${m.st[k]}`).join(' ')}</div></div>
+        <span class="adj"><button class="mini" data-a="up" data-v="${i}" aria-label="${m.name} 앞으로"${i?'':' disabled'}>▲</button><button class="rdel" data-a="kick" data-v="${i}" aria-label="${m.name} 삭제">삭제</button></span></div>`).join('');
   const cur=S.mode==='combat'&&!busy&&S.combat?S.combat.cur:-1, t=now();
   return S.party.map((m,i)=>{
     const hpP=Math.max(0,m.hp/m.mhp*100), mpP=m.mmp?m.mp/m.mmp*100:0, spP=m.msp?m.sp/m.msp*100:0, ready=m.xp>=need(m.lv), pend=skPend(m);
