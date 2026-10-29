@@ -1109,7 +1109,8 @@ function drawView(t){
 }
 function drawEnemies(t){
   const g=ctx; g.fillStyle='rgba(5,3,4,.5)'; g.fillRect(-10,-10,W+20,H+20);
-  for(const {e,x,yb,th} of layout(t)){
+  const L=layout(t), slotW=W/(L.length+1)-6;  // 이름표가 옆 몬스터와 겹치지 않게 칸 폭 안에 맞춘다
+  for(const {e,x,yb,th} of L){
     const dying = e.hp<=0, dp = dying ? Math.min(1,(t-e.diedAt)/800) : 0;
     const hitP = e.hitAt ? (t-e.hitAt)/300 : 1, atkP = e.atkAt ? (t-e.atkAt)/350 : 1;
     let ox=0, oy=reduce?0:Math.sin(t/420+e.ph)*2, sc=1;
@@ -1127,9 +1128,10 @@ function drawEnemies(t){
     g.restore();
     if(dying) continue;
     g.save(); g.textAlign='center'; g.font='13px "Gowun Batang",serif'; g.lineWidth=3; g.strokeStyle='rgba(0,0,0,.85)';
-    const label=e.name+(e.sleep?' · 잠':''); g.strokeText(label,x,yb+18); g.fillStyle=css('--line'); g.fillText(label,x,yb+18);
+    if(L.length>=4) g.font='12px "Gowun Batang",serif';
+    const label=(L.length>=4?e.name.replace('이계의 ',''):e.name)+(e.sleep?' · 잠':''); g.strokeText(label,x,yb+18,slotW); g.fillStyle=css('--line'); g.fillText(label,x,yb+18,slotW);
     const tags=(e.bf||[]).map(b=>BUFF[b.k].n).join(' ');
-    if(tags){ g.font='12px "Gowun Batang",serif'; g.strokeText(tags,x,yb+33); g.fillStyle=css('--mag'); g.fillText(tags,x,yb+33); }
+    if(tags){ g.font='12px "Gowun Batang",serif'; g.strokeText(tags,x,yb+33,slotW); g.fillStyle=css('--mag'); g.fillText(tags,x,yb+33,slotW); }
     g.restore();
   }
 }
