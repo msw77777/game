@@ -366,8 +366,6 @@ const QUESTS = [
 // 2회차 의뢰 (cyc: 이 회차부터 게시판에 붙는다)
 QUESTS.push(
   {id:'q_unk',     n:'알 수 없는 미궁의 끝', d:'폐허 아래 열린 알 수 없는 미궁. 그 가장 깊은 곳에 있는 것을 쓰러뜨려라.', kind:'unkboss', need:1, main:1, cyc:2},
-  {id:'q_unk3',    n:'심연 정찰', d:'알 수 없는 미궁의 3층까지 내려가라. 들어갈 때마다 길이 바뀐다.', kind:'unkfloor', need:3, gold:300, xp:300, potions:3, cyc:2},
-  {id:'q_unkkill', n:'이계의 마물 사냥', d:'알 수 없는 미궁의 마물 15마리를 처치하라.', kind:'kill', tgt:'unknown', need:15, gold:400, xp:400, cyc:2},
 );
 const QMAX = 3;
 // 마도왕을 쓰러뜨리면 얻는 유니크 전리품 (파티에 있는 직업마다 하나씩)
@@ -380,6 +378,7 @@ const UNIQUES = {
 const uniqueById = id => Object.values(UNIQUES).find(u=>u.id===id);
 // 알 수 없는 미궁: 들어갈 때마다 새로 만들어지고, 몬스터는 이계의 힘으로 강해진다
 const UNK = {hp:1.7, atk:1.35, xp:2.2, gold:2};
+const SHRINE_REVIVE = {1:3, 2:2, 3:1};
 const UNKNOWN_BOSS = {id:'boss',n:'이름 없는 자',hp:[460,460],atk:[17,27],def:5,xp:1600,g:[1000,1000],ag:13,boss:1,big:1,ic:'lorc_crowned-skull'};
 const UNK_TEXT = {1:'알 수 없는 미궁 1층. 벽이 숨을 쉬듯 움직인다. 들어올 때마다 길이 바뀐다.', 2:'알 수 없는 미궁 2층. 발소리가 한 박자 늦게 따라온다.', 3:'알 수 없는 미궁 3층. 어둠 너머에서 이름 없는 무언가가 기다린다.'};
 const DX=[0,1,0,-1], DY=[-1,0,1,0], DIRS=['북','동','남','서'], TAGS=['갑','을','병','정','무'];
@@ -421,6 +420,8 @@ function normalize(){
   S.kills ||= {}; S.chests ||= 0; S.maxFloor ||= 0; S.quests ||= {acc:{},done:[],ready:[]};
   S.quests.ready ||= [];
   if(S.townView==='save') S.townView='inn';
+  if(S.cycle>=2 && S.townView!=='main') S.townView='main';
+  if(S.unk && !S.unk.prayed) S.unk.prayed={};
   S.cycle ||= 1; S.rebirths ||= 0; S.realm ||= 'normal'; S.unkMax ||= 0; S.loot ||= [];
   if(S.realm==='unknown' && !S.unk) S.realm='normal';
   if(S.mode==='won') S.mode='town';
@@ -605,6 +606,10 @@ function genFloor(seed,f){
       if(g[ny][nx]==='.' && !(k in dist)){ dist[k]=dist[x+','+y]+1; q.push([nx,ny]); if(dist[k]>dist[far[0]+','+far[1]]) far=[nx,ny]; } } }
   g[1][1]='<'; g[far[1]][far[0]] = f===3 ? 'B' : '>';
   const dead=Object.keys(dist).map(k=>k.split(',').map(Number)).filter(([x,y])=>g[y][x]==='.' && D4.filter(([dx,dy])=>g[y+dy][x+dx]!=='#').length===1);
+  // 시작점에서 어느 정도 떨어진 막다른 길에 정령의 제단, 나머지 막다른 길 두 곳에 상자
+  const open=Object.keys(dist).map(k=>k.split(',').map(Number)).filter(([x,y])=>g[y][x]==='.'&&dist[x+','+y]>=4);
+  const far2=dead.filter(([x,y])=>dist[x+','+y]>=5), pickS=far2.length?far2:dead.length?dead:open;
+  if(pickS.length){ const [x,y]=pickS[Math.floor(r()*pickS.length)]; g[y][x]='S'; const di=dead.findIndex(([a,b])=>a===x&&b===y); if(di>=0) dead.splice(di,1); }
   for(let i=0;i<2&&dead.length;i++){ const [x,y]=dead.splice(Math.floor(r()*dead.length),1)[0]; g[y][x]='T'; }
   return g.map(row=>row.join(''));
 }
@@ -633,7 +638,7 @@ function enterDungeon(){
   S.spiritUsed=false;
   // 2회차부터 옛 미궁은 무너졌다. 입구는 들어갈 때마다 모양이 바뀌는 알 수 없는 미궁으로 이어진다
   if(S.cycle>=2){
-    S.realm='unknown'; S.unk={seed:(Math.random()*1e9)|0, bossDead:false}; S.explored={1:[],2:[],3:[]}; S.opened=[];
+    S.realm='unknown'; S.unk={seed:(Math.random()*1e9)|0, bossDead:false, prayed:{}}; S.explored={1:[],2:[],3:[]}; S.opened=[];
     log('「?」 — 알 수 없는 미궁. 들어설 때마다 길이 바뀐다.','mag');
   } else S.realm='normal';
   S.mode='dungeon'; S.floor=1; const p=find(1,'<'); S.x=p.x; S.y=p.y; S.dir=openDir(p.x,p.y);
@@ -641,6 +646,7 @@ function enterDungeon(){
 }
 function move(k){
   if(S.mode!=='dungeon') return;
+  UI.shrine=null; UI.confirm=null;
   if(k==='L') S.dir=(S.dir+3)%4;
   else if(k==='R') S.dir=(S.dir+1)%4;
   else if(k==='U') S.dir=(S.dir+2)%4;
@@ -656,6 +662,7 @@ function move(k){
 }
 function onEnter(){
   const ch=cell(S.x,S.y);
+  if(ch==='S'){ log(S.unk?.prayed?.[S.floor]?'정령의 제단. 이 층의 빛은 이미 다 썼다.':'정령의 제단. 푸른 불꽃이 흔들린다. 정령의 목소리가 들린다. 「기도하라.」','mag'); return render(); }
   if(ch==='B' && S.realm==='unknown'){ log('끝없는 어둠. 형체 없는 무언가가 파티의 이름을 하나씩 부른다.','bad'); log('"…너희는 누구였지?"','mag'); return startCombat(true); }
   if(ch==='B'){ log('룬이 새겨진 방. 검붉은 거체가 어둠 속에서 몸을 일으킨다.','bad'); log('"서약의 검을 원하는가. 그렇다면 여기서 썩어라."','bad'); return startCombat(true); }
   if(ch==='T') log('낡은 보물상자가 놓여 있다.','gold');
@@ -684,6 +691,25 @@ function openChest(){
   const g=rnd(30,80)*S.floor; S.gold+=g; log(`금화 ${g}G를 얻었다.`,'gold');
   if(Math.random()<0.6){ S.potions++; log('치유 물약을 하나 발견했다.','gold'); }
   checkQuests(); render();
+}
+function pray(){
+  const f=S.floor, cap=SHRINE_REVIVE[f]||1;
+  if(!S.unk || S.unk.prayed[f]) return render();
+  S.unk.prayed[f]=true;
+  const dead=S.party.filter(m=>m.dead), back=dead.slice(0,cap);
+  back.forEach(m=>{ m.dead=false; m.hp=Math.ceil(m.mhp/2); m.mp=0; m.bf=[]; pfx(m,'heal','부활'); });
+  living().filter(m=>!back.includes(m)).forEach(m=>{ m.hp=m.mhp; m.mp=m.mmp; m.bf=[]; pfx(m,'heal','회복'); });
+  fx('spirit',W/2,H/2,{dur:1200});
+  log('✧ 제단에 기도했다. 푸른 불꽃이 파티를 감싼다.','mag');
+  if(back.length) log(`  되살아났다: ${back.map(m=>m.name).join(', ')} (HP 절반)`,'good');
+  if(dead.length>back.length) log(`  이 층의 제단으로는 ${cap}명까지만 되살릴 수 있다. ${dead.length-back.length}명은 아직 잠들어 있다.`,'bad');
+  log('  살아 있던 동료들의 HP와 MP가 모두 회복되고 독과 저주가 풀렸다.','good');
+  render();
+}
+function shrineLevel(){
+  let any=false; living().forEach(m=>{ if(levelUp(m)) any=true; });
+  if(any) log('정령이 쌓인 경험을 힘으로 바꾸었다.','mag'); else log('아직 레벨이 오를 동료가 없다.','sys');
+  render();
 }
 function useSpirit(){
   if(!S.spirit || S.spiritUsed || S.mode!=='dungeon') return;
@@ -950,7 +976,7 @@ const END = {
     {sc:'blast', tx:()=>`자폭. 흰 빛이 미궁을 삼키고, 땅 위의 리르가드까지 치솟는다.`},
     {sc:'shield', tx:()=>`${J(S.party[0].name,'이','가')} 방패를 들어 올리고 동료들이 그 뒤로 몸을 던진다.<br>그 순간, 장막 위로 푸른 빛이 겹쳐졌다. 이 땅의 정령이 파티를 감쌌다.`},
     {sc:'ruin', tx:()=>`지상으로 올라오자 리르가드는 잿더미였다.<br>여관 주인도, 대장장이도, 사제도, 영주도… 살아남은 것은 파티와 정령뿐이다.`},
-    {sc:'spirit', tx:()=>`정령: 「폐허 아래에 새 미궁이 열렸다. 들어갈 때마다 모양이 바뀌는, 이름 없는 것의 미궁이다.<br>내가 함께 가겠다. 길을 잃으면 나를 불러라.」`, last:'2회차 시작'},
+    {sc:'spirit', tx:()=>`정령: 「폐허 아래에 새 미궁이 열렸다. 들어갈 때마다 모양이 바뀌는, 이름 없는 것의 미궁이다.<br>층마다 내 제단을 두겠다. 길을 잃으면 나를 불러라.」`, last:'2회차 시작'},
   ],
   reborn:[
     {sc:'unkdie', tx:()=>`이름 없는 자가 소리 없이 흩어진다. 그것이 무엇이었는지 끝내 아무도 알지 못했다.`},
@@ -971,8 +997,8 @@ function startCycle2(){
   delete S.quests.acc.q_boss; if(!S.quests.done.includes('q_boss')) S.quests.done.push('q_boss');
   S.quests.acc.q_unk=0;
   log('── 2회차 ──','round');
-  log('폐허가 된 리르가드. 무너진 미궁 입구 자리에 「?」 모양의 균열이 열려 있다.','mag');
-  log('정령이 남은 건물들에 희미한 빛을 깃들여, 여관·상점·사원은 그대로 쓸 수 있다.','sys');
+  log('무너진 리르가드. 남은 것은 잿더미와, 미궁 입구 자리에 열린 「?」 모양의 균열뿐이다.','mag');
+  log('여관도 상점도 사원도 무너졌다. 저장·레벨업·부활은 미궁 각 층의 정령의 제단에서 할 수 있다.','sys');
   render();
 }
 function reincarnate(){
@@ -1026,6 +1052,7 @@ function marker(ch,a,b,d,t){
   const cx=W/2, y=(a.b+b.b)/2, s=(b.r-b.l)/W*130;
   ctx.save(); ctx.globalAlpha=1-d*0.16;
   if(ch==='>'||ch==='<') drawIcon(ctx,'delapouite_stairs',cx,y-s*0.15,s*0.9,css('--line'),'#5a4a3e');
+  if(ch==='S'){ ctx.globalAlpha=(1-d*0.16)*(S.unk?.prayed?.[S.floor]?0.35:1); drawWisp(cx,y-s*0.45,s*0.14,t); }
   if(ch==='T'){ ctx.shadowColor=css('--gold'); ctx.shadowBlur=14; if(!drawSprite(ctx,'props/chest',cx,y+s*0.15,s*0.7,t)) drawIcon(ctx,'delapouite_chest',cx,y-s*0.2,s*0.8,'#f0c46a','#7a5520'); }
   if(ch==='B'){ ctx.shadowColor=css('--blood'); ctx.shadowBlur=24+6*Math.sin(t/200); drawIcon(ctx,'lorc_candle-skull',cx,y-s*0.35,s*1.1,'#e8d9b8','#6b1a14'); }
   ctx.restore();
@@ -1094,6 +1121,8 @@ function drawView(t){
     if(d>=1) marker(cell(cx,cy),a,b,d,t);
     if(wall(cx+fx_,cy+fy)){ stone([[b.l,b.t],[b.r,b.t],[b.r,b.b],[b.l,b.b]],sh,4); break; }
   }
+  // 제단 위에 서 있으면 눈앞에 정령의 불꽃이 떠 있다
+  if(S.mode!=='ending' && cell(S.x,S.y)==='S'){ g.save(); g.globalAlpha=S.unk?.prayed?.[S.floor]?0.35:1; drawWisp(W/2,H*0.6,20,t); g.restore(); }
   // 흔들리는 촛불빛과 비네트
   const flick = reduce ? 0.16 : 0.15+0.025*Math.sin(t/97)+0.015*Math.sin(t/41);
   gr=g.createRadialGradient(W/2,H*0.95,10,W/2,H*0.95,W*0.75); gr.addColorStop(0,`rgba(255,160,70,${flick})`); gr.addColorStop(1,'rgba(255,160,70,0)'); g.fillStyle=gr; g.fillRect(0,0,W,H);
@@ -1158,9 +1187,9 @@ function drawAutomap(){
   // 출발점(올라가는 계단)과 목표(내려가는 계단·보스방)는 처음부터 표시한다
   g.font=`${Math.round(sz*0.62)}px "Gowun Batang",serif`; g.textAlign='center'; g.textBaseline='middle';
   rows.forEach((row,y)=>[...row].forEach((ch,x)=>{
-    const mark = ch==='<'?'▲':ch==='>'?'▼':ch==='B'&&!bossGone()?'✠':''; if(!mark) return;
-    const seen=ex.has(`${x},${y}`);
-    g.fillStyle = ch==='B' ? `rgba(224,87,63,${seen?1:.75})` : `rgba(233,223,198,${seen?1:.6})`;
+    const mark = ch==='<'?'▲':ch==='>'?'▼':ch==='B'&&!bossGone()?'✠':ch==='S'?'✧':''; if(!mark) return;
+    const seen=ex.has(`${x},${y}`), used=ch==='S'&&S.unk?.prayed?.[f];
+    g.fillStyle = ch==='B' ? `rgba(224,87,63,${seen?1:.75})` : ch==='S' ? `rgba(159,208,255,${used?.35:seen?1:.7})` : `rgba(233,223,198,${seen?1:.6})`;
     g.fillText(mark,ox+x*sz+sz/2,oy+y*sz+sz/2+1);
   }));
   const cx=ox+(S.x+0.5)*sz, cy=oy+(S.y+0.5)*sz, a=[-Math.PI/2,0,Math.PI/2,Math.PI][S.dir], r=sz*0.38;
@@ -1168,7 +1197,7 @@ function drawAutomap(){
   g.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); g.lineTo(cx+Math.cos(a+2.5)*r,cy+Math.sin(a+2.5)*r); g.lineTo(cx+Math.cos(a-2.5)*r,cy+Math.sin(a-2.5)*r); g.fill();
   g.shadowBlur=0; g.textAlign='left'; g.textBaseline='alphabetic'; g.font='12px "Gowun Batang",serif'; g.fillStyle='rgba(217,202,169,.8)';
   g.fillText(`${S.realm==='unknown'?'알 수 없는 미궁':'지하'} ${S.floor}층 지도`,12,20);
-  g.textAlign='right'; g.fillText(`▲ 올라가는 계단   ▼ 내려가는 계단${S.floor===3&&!bossGone()?(S.realm==='unknown'?'   ✠ 이름 없는 자':'   ✠ 마도왕'):''}`,W-12,20);
+  g.textAlign='right'; g.fillText(`${S.realm==='unknown'?'✧ 제단   ':''}▲ 올라가는 계단   ▼ 내려가는 계단${S.floor===3&&!bossGone()?(S.realm==='unknown'?'   ✠ 이름 없는 자':'   ✠ 마도왕'):''}`,W-12,20);
   g.restore();
 }
 
@@ -1290,7 +1319,7 @@ function drawTown(t){
   for(let k=7;k>=0;k--){
     drawHouse(-1,k,cz,t); drawHouse(1,k,cz,t);
     if(k%3===1){ drawLamp(-1.3,k+0.5,cz,t); drawLamp(1.3,k+0.5,cz,t); }
-    for(const key in TOWN) if(TOWN[key].side && Math.floor(TOWN[key].z)===k) drawSign(key,cz,t);
+    for(const key in TOWN) if(TOWN[key].side && Math.floor(TOWN[key].z)===k && (key==='gate' || !ruined())) drawSign(key,cz,t);
   }
   if(ruined()) drawEmbers(t);
   gr=g.createLinearGradient(0,HZ-40,0,HZ+70); gr.addColorStop(0,'rgba(70,50,60,0)'); gr.addColorStop(.5,'rgba(70,50,60,.28)'); gr.addColorStop(1,'rgba(70,50,60,0)'); g.fillStyle=gr; g.fillRect(0,HZ-40,W,110);
@@ -1531,13 +1560,24 @@ function cmdHTML(){
     if(UI.anim) return `<p class="prompt muted">…걸어가는 중…</p>`;
     const ready=S.quests.ready.length, here=TOWN[S.townView], ru=ruined();
     const go=(k,label,o={})=>B(label,'go',k,o);
-    return `<p class="prompt">${here?`${tname(S.townView)}에 와 있다.`:ru?'폐허가 된 리르가드. 어디로 갈까?':'어디로 갈까?'}</p>
+    if(ru) return `<p class="prompt">무너진 리르가드. 남은 것은 「?」 균열뿐이다.</p>
+      <div class="btns">${go('gate','? 알 수 없는 미궁',{wide:1,primary:1,sub:'들어갈 때마다 바뀐다'})}${B('타이틀로','quit')}</div>
+      <p class="hint">저장·레벨업·부활은 미궁 각 층의 ✧ 정령의 제단에서 한다.</p>`;
+    return `<p class="prompt">${here?`${tname(S.townView)}에 와 있다.`:'어디로 갈까?'}</p>
       <div class="btns">${go('gate',ru?'? 알 수 없는 미궁':'미궁으로 내려간다',{wide:1,primary:1,sub:ru?'들어갈 때마다 바뀐다':''})}${go('quests','의뢰 게시판',{sub:ready?`보고 ${ready}`:''})}${go('inn','여관')}${go('shop','상점')}${go('temple','사원')}${B('타이틀로','quit')}</div>`;
+  }
+  if(S.mode==='dungeon' && UI.shrine && cell(S.x,S.y)==='S'){
+    const f=S.floor, cap=SHRINE_REVIVE[f]||1, used=S.unk?.prayed?.[f], dead=S.party.filter(m=>m.dead).length, ups=living().filter(m=>m.xp>=need(m.lv)).length;
+    if(UI.shrine==='save') return `<p class="prompt">정령에게 기록을 맡긴다. 어느 칸에?</p><div class="btns">${slotButtons('save')}${B('← 제단으로','shrineback')}</div><p class="store">${UI.saving?'기록하는 중…':Store.label()+' · 불러오면 폐허의 마을에서 다시 시작한다'}</p>`;
+    return `<p class="prompt">✧ 정령의 제단 · 지하 ${f}층</p>
+      <div class="btns">${B(used?'기도 — 이 층에서는 이미 했다':`기도한다`,'pray','',{wide:1,primary:!used,dis:used,sub:used?'':`부활 최대 ${cap}명 · 파티 회복`})}
+      ${B('레벨을 올린다','shrinelv','',{dis:!ups,sub:ups?`${ups}명 가능`:'없음'})}${B('기록부에 남긴다','shrinesave')}${B('떠난다','shrineleave')}</div>
+      <p class="hint">기도는 층마다 한 번. 쓰러진 동료 ${dead}명${dead>cap?` 중 ${cap}명만`:''} 되살아난다. 1층 3명 · 2층 2명 · 3층 1명.</p>`;
   }
   if(S.mode==='dungeon'){
     const ch=cell(S.x,S.y);
     const ctxBtn = ch==='<' ? B(S.floor===1?'▲ 마을로':'▲ 위층으로','stairs','',{primary:1})
-      : ch==='>' ? B('▼ 아래층으로','stairs','',{primary:1}) : ch==='T' ? B('상자 열기','chest','',{primary:1}) : '<span></span>';
+      : ch==='>' ? B('▼ 아래층으로','stairs','',{primary:1}) : ch==='T' ? B('상자 열기','chest','',{primary:1}) : ch==='S' ? B('✧ 제단','shrine','',{primary:1}) : '<span></span>';
     const pr=S.party.find(m=>m.cls==='승려'&&!m.dead&&m.mp>=1);
     return `<div class="pad">${B('↶ 왼쪽','mv','L')}${B('▲ 전진','mv','F')}${B('↷ 오른쪽','mv','R')}${B('⟲ 뒤돌기','mv','U')}${B('▼ 후퇴','mv','B')}${ctxBtn}</div>
       <div class="btns">${S.spirit?B('✧ 정령','spirit','',{dis:S.spiritUsed,primary:!S.spiritUsed,sub:S.spiritUsed?'잠듦':'이 층 입구로'}):''}${B(UI.map?'지도 끄기':'지도 켜기','map','',{sub:touch?'':'M'})}${B('사나 (치유 주문)','heal','spell',{dis:!pr||!living().some(m=>m.hp<m.mhp),sub:pr?`${pr.name} MP ${pr.mp}`:''})}${B('치유 물약','heal','potion',{dis:!S.potions||!wounded(),sub:`${S.potions}개`})}</div>
@@ -1622,7 +1662,7 @@ function render(){
   $('#viewcap').textContent = {title:'서장',create:'등록소',town:'마을',ending:'종장',dead:'종막',combat:'전투'}[S.mode] || '시야';
   if(inView){ drawFrame(now()); kick(); } else $('#place').innerHTML=placeHTML();
   const ch=S.mode==='dungeon'?cell(S.x,S.y):'';
-  $('#loc').textContent = S.mode==='ending' ? '' : S.mode==='town' ? (here ? `${tname(UI.fac)} 앞. ${tdesc(UI.fac)}` : ruined() ? '잿더미가 된 리르가드. 불씨가 날린다. 오른쪽 무너진 입구 자리에 보랏빛 「?」 균열이 열려 있다.' : '리르가드 광장. 왼쪽에 여관과 길드, 오른쪽에 상점과 지하묘지 입구, 길 끝에 사원이 보인다.')
+  $('#loc').textContent = S.mode==='ending' ? '' : S.mode==='town' ? (here ? `${tname(UI.fac)} 앞. ${tdesc(UI.fac)}` : ruined() ? '잿더미가 된 리르가드. 간판도 불빛도 남지 않았다. 오른쪽 무너진 입구 자리에 보랏빛 「?」 균열만 열려 있다.' : '리르가드 광장. 왼쪽에 여관과 길드, 오른쪽에 상점과 지하묘지 입구, 길 끝에 사원이 보인다.')
     : S.mode==='combat' ? '적과 마주쳤다.'
     : ch==='T'?'발밑에 보물상자가 있다.':ch==='<'?'올라가는 계단 위에 서 있다.':ch==='>'?'내려가는 계단 앞에 서 있다.':`좌표 ${S.x}·${S.y}`;
   $('#party').innerHTML=partyHTML();
@@ -1664,6 +1704,12 @@ function dispatch(a,v){
   if(a==='cure') return cure(+v);
   if(a==='map') return toggleMap();
   if(a==='spirit') return useSpirit();
+  if(a==='shrine'){ UI.shrine='main'; UI.slots=null; refreshSlots(); return render(); }
+  if(a==='pray') return pray();
+  if(a==='shrinelv') return shrineLevel();
+  if(a==='shrinesave'){ UI.shrine='save'; return render(); }
+  if(a==='shrineback'){ UI.shrine='main'; UI.confirm=null; return render(); }
+  if(a==='shrineleave'){ UI.shrine=null; UI.confirm=null; return render(); }
   if(a==='accept') return acceptQuest(v);
   if(a==='claim') return claimQuest(v);
   if(a==='enter') return enterDungeon();
