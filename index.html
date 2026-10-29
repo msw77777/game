@@ -7,7 +7,7 @@
 /* Layout: 고딕 지하묘지 — 촛불 아래 돌벽, 양피지빛 선과 핏빛 강조. 왼쪽 시야+기록, 오른쪽 파티+명령 */
 :root{
   --bg:#0b090a; --win:#151012; --win2:#221a1c; --line:#d9caa9; --dim:#8f7f6c;
-  --blood:#a3241d; --bad:#e0573f; --gold:#d9a647; --hp:#86ad6c; --mag:#a08ddb; --poison:#9cc25a;
+  --blood:#a3241d; --bad:#e0573f; --gold:#d9a647; --hp:#86ad6c; --mag:#a08ddb; --poison:#9cc25a; --sp:#e3bf3e;
   --f-black:'UnifrakturMaguntia','Old English Text MT',serif;
   --f-display:'Song Myung','Nanum Myeongjo','Batang',serif;
   --f-body:'Gowun Batang','Nanum Myeongjo','Batang',serif;
@@ -70,7 +70,7 @@ canvas{display:block;width:100%;height:auto;max-width:100%;background:#050304}
 .pm .row{grid-column:2/4;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.7fr);gap:10px;font-size:12px;color:var(--dim)}
 .bar{height:5px;background:#050304;border:1px solid #4a3c35;margin-top:3px}
 .bar i{display:block;height:100%;background:var(--hp)}
-.bar.mp i{background:var(--mag)}.bar.low i{background:var(--bad)}
+.bar.mp i{background:var(--mag)}.bar.sp i{background:var(--sp)}.bar.low i{background:var(--bad)}
 .pm .tag{font-size:12px;color:var(--dim);text-align:right}
 .bfs{grid-column:2/4;display:flex;flex-wrap:wrap;gap:4px}
 .bf{font-size:11px;line-height:1.5;padding:0 5px;border:1px solid currentColor}
@@ -144,6 +144,31 @@ footer a{color:var(--dim)}
 .tab{font:16px var(--f-display);letter-spacing:.2em;color:var(--dim);background:none;border:0;border-bottom:2px solid transparent;padding:8px 18px;margin-bottom:-1px;cursor:pointer}
 .tab[aria-selected="true"]{color:var(--gold);border-bottom-color:var(--gold)}
 .tab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* 기술 고르기 */
+.skcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.skc{display:grid;gap:6px;align-content:start;text-align:left;font:14px/1.55 var(--f-body);color:var(--line);background:rgba(5,3,4,.45);border:1px solid var(--dim);padding:14px 12px;cursor:pointer;min-width:0}
+.skc:hover{border-color:var(--gold);background:rgba(217,166,71,.08)}
+.skc:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.skc b{font:400 19px/1.3 var(--f-display);color:var(--gold)}
+.skc em{font:13px var(--f-body);font-style:normal;color:var(--line);border:1px solid var(--gold);padding:0 5px;margin-left:4px;white-space:nowrap}
+.skc .sk-who{font-size:12px;letter-spacing:.12em;color:var(--dim)}
+.skc .sk-type{font-size:12px;color:var(--mag)}
+.skc p{margin:0}
+.known{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.known span{font-size:12px;border:1px solid #4a3c35;padding:1px 7px;color:var(--dim)}
+.bf.skp{cursor:pointer;color:var(--sp);background:transparent;font-family:var(--f-body)}
+.slotrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;width:100%}
+.roster{display:flex;flex-wrap:wrap;gap:6px}
+.rchip{display:inline-flex;align-items:center;gap:8px;border:1px solid #4a3c35;padding:4px 4px 4px 10px;font-size:14px}
+.rchip small{color:var(--dim)}
+.rdel{font:13px var(--f-body);color:var(--bad);background:transparent;border:1px solid var(--bad);padding:2px 8px;min-height:30px;cursor:pointer}
+.rdel:hover{background:var(--blood);color:var(--line)}
+.full-note{margin:0;padding:10px 12px;border-left:3px solid var(--gold);background:rgba(217,166,71,.07)}
+.cf.locked .chip,.cf.locked .mini,.cf.locked #cname{opacity:.35}
+.st .sd{grid-column:1/-1;font-size:12px;color:var(--dim);margin-top:-4px;line-height:1.4}
+/* 타이틀 화면: 파티·기록 창 없이 시작 정보와 명령만 */
+html.title #partybox,html.title #logbox,html.title #recent{display:none}
+html.title .grid{grid-template-areas:"view cmd";grid-template-rows:auto}
 /* 등록소 */
 .cf{display:grid;gap:16px}
 .fld{display:grid;gap:8px}
@@ -182,6 +207,18 @@ footer a{color:var(--dim)}
 .logclose{display:none}
 @media (max-width:840px){
   .grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"view" "cmd" "party" "log"}
+  html.title .grid{grid-template-areas:"view" "cmd"}
+  html.title .place{min-height:0;gap:8px}
+  html.title .place .hero svg{width:48px;height:48px}
+  html.title .place h2{font-size:22px}
+  html.title .place p{font-size:14px;line-height:1.6}
+  html.title .wrap{gap:12px;padding-block:10px 16px}
+  html.title footer{font-size:11px}
+  html.title .place .story{display:none}
+  html.title #cmd .btn{min-height:40px;padding-block:6px}
+  html.title #cmd .slot small{font-size:11px}
+  html.title .win{padding-block:14px 10px}
+  .skcards{grid-template-columns:minmax(0,1fr)}
   #recent{display:block}
   #log{flex:none;height:160px;min-height:0}
   .mhead{flex-wrap:wrap}
@@ -224,6 +261,12 @@ footer a{color:var(--dim)}
     border-width:1px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.7)}
   html.play.logopen #log{height:auto;flex:1 1 0;min-height:0}
   html.play.logopen .logclose{display:block;align-self:flex-end;margin-bottom:6px}
+}
+/* 키가 작은 폰의 타이틀: 장식 문구를 줄여 한 화면에 넣는다 */
+@media (max-width:840px) and (max-height:700px){
+  html.title .brand .bl,html.title .place .store{display:none}
+  html.title h1{font-size:22px}
+  html.title .place .hero svg{width:36px;height:36px}
 }
 /* 가로로 눕힌 폰: 왼쪽 시야, 오른쪽 파티와 명령 */
 @media (max-width:940px) and (orientation:landscape) and (max-height:540px){
@@ -393,6 +436,7 @@ const BUFF = {
   bless:  {n:'축복', good:1, atk:2, hit:10},
   protect:{n:'보호', good:1, def:3},
   rage:   {n:'광폭', good:1, atk:4},
+  taunt:  {n:'도발', good:1, def:3},
   weak:   {n:'약화', good:0, atk:-2, def:-2},
   curse:  {n:'저주', good:0, atk:-3, hit:-15},
   poison: {n:'독',   good:0, dot:[2,4]},
@@ -458,6 +502,46 @@ const RARES = [
   {id:'r_ring',  n:'수호의 반지', d:'방어 +2, 최대 HP +8',    cls:null,             def:2, hp:8},
 ];
 const itemById = id => uniqueById(id) || RARES.find(r=>r.id===id);
+
+// ───── 기술 ─────
+// 레벨 3·5·7·9…마다 기술 하나를 고른다. 후보 3장은 그 동료의 종족 기술과 직업 기술에서 뽑는다.
+// 이미 가진 기술이 나오면 고를 때 한 단계 강화된다 (최대 3단계).
+const skillSlots = lv => lv>=3 ? Math.floor((lv-1)/2) : 0;
+const SKMAX = 3;
+// use: 액티브 기술이 쓰는 자원 (sp 정신력 / mp), k: 상시 효과의 단계당 보너스, grow: 배울 때 늘어나는 최대치
+const SKILLS = {
+  smash:  {n:'강타',        who:'전사',  use:'sp', cost:2, tgt:'enemy',     d:r=>`적 하나에게 ${150+25*(r-1)}% 피해. 명중 +20`},
+  sweep:  {n:'휩쓸기',      who:'전사',  use:'sp', cost:3, tgt:'all-enemy', d:r=>`모든 적에게 ${60+15*(r-1)}% 피해`},
+  taunt:  {n:'도발',        who:'전사',  use:'sp', cost:1, tgt:'self',      d:r=>`${1+r}라운드 동안 적의 근접 공격을 자신에게 끌어오고 방어 +3`},
+  wall:   {n:'철벽',        who:'전사',  k:{def:2},                          d:r=>`방어 +${2*r}`},
+  vital:  {n:'급소 찌르기', who:'도적',  use:'sp', cost:2, tgt:'enemy',     d:r=>`반드시 명중. 급소 확률 ${50+15*(r-1)}%`},
+  venom:  {n:'독 바르기',   who:'도적',  use:'sp', cost:2, tgt:'enemy',     d:r=>`공격하고 독을 건다. 매 라운드 ${2*r+1}~${3*r+2} 피해`},
+  shadow: {n:'그림자 걸음', who:'도적',  k:{evade:0.1},                      d:r=>`적의 근접 공격을 ${10*r}% 확률로 피한다`},
+  nimble: {n:'날렵함',      who:'도적',  k:{ag:3},                           d:r=>`민첩 +${3*r}. 더 먼저 움직인다`},
+  purify: {n:'정화의 빛',   who:'승려',  use:'mp', cost:2, tgt:'ally',      d:r=>`아군 하나의 독·저주·약화를 풀고 HP ${8*r}+ 회복`},
+  miracle:{n:'기적',        who:'승려',  use:'mp', cost:5, tgt:'dead',      d:r=>`전투 중 쓰러진 동료 하나를 HP ${25*r}%로 되살린다`},
+  faith:  {n:'신앙의 방패', who:'승려',  k:{heal:3},                         d:r=>`회복 주문의 회복량 +${3*r}`},
+  hallow: {n:'축성',        who:'승려',  k:{undead:0.5},                     d:r=>`언데드에게 주는 피해 +${50*r}%`},
+  bolt:   {n:'번개',        who:'마법사', use:'mp', cost:2, tgt:'enemy',    d:r=>`적 하나에게 8~16 + 주문 위력${r>1?` + ${5*(r-1)}`:''} 피해`},
+  freeze: {n:'얼음 감옥',   who:'마법사', use:'mp', cost:3, tgt:'enemy',    d:r=>`적 하나를 ${1+r}라운드 얼린다. 맞아도 풀리지 않는다`},
+  focus:  {n:'마력 집중',   who:'마법사', k:{mag:2},                         d:r=>`주문 위력 +${2*r}`},
+  flow:   {n:'마나 순환',   who:'마법사', grow:{mp:3},                       d:r=>`최대 MP +${3*r}`},
+  tough:  {n:'불굴',        who:'인간',  grow:{hp:5},                        d:r=>`최대 HP +${5*r}`},
+  versed: {n:'다재다능',    who:'인간',  k:{xp:0.1},                         d:r=>`얻는 경험치 +${10*r}%`},
+  attune: {n:'정령 친화',   who:'엘프',  grow:{res:2},                       d:r=>`최대 MP 또는 정신력 +${2*r}`},
+  keen:   {n:'예리한 눈',   who:'엘프',  k:{hit:8},                          d:r=>`명중 +${8*r}`},
+  stone:  {n:'강철 피부',   who:'드워프', k:{def:1}, grow:{hp:3},            d:r=>`방어 +${r}, 최대 HP +${3*r}`},
+  stout:  {n:'독 내성',     who:'드워프', k:{pres:0.34},                     d:r=>`독에 걸리지 않을 확률 ${Math.min(100,34*r)}%`},
+  tinker: {n:'손재주',      who:'노움',  k:{trap:1, hit:3},                  d:r=>`상자 함정을 해제한다. 명중 +${3*r}`},
+  calm:   {n:'명상',        who:'노움',  k:{regen:1},                        d:r=>`전투 중 매 라운드 MP·정신력 +${r}`},
+  lucky:  {n:'행운',        who:'호빗',  k:{crit:0.05},                      d:r=>`급소 확률 +${5*r}%`},
+  slip:   {n:'재빠른 몸',   who:'호빗',  k:{evade:0.08},                     d:r=>`적의 근접 공격을 ${8*r}% 확률로 피한다`},
+};
+const skR = (m,id) => (m.skills && m.skills[id]) || 0;
+const skB = (m,key) => Object.entries(m.skills||{}).reduce((s,[id,r])=>s+(((SKILLS[id]||{}).k||{})[key]||0)*r,0);
+const skPend = m => skillSlots(m.lv) - (m.skTaken||0);
+const caster = m => CLS[m.cls].mp0>0;
+const STAT_DESC = {str:'근접 공격 피해', iq:'마법사의 주문 위력과 MP', pie:'승려의 주문 위력과 MP', vit:'처음 HP, 레벨업 HP, 정신력', agi:'행동 순서와 명중', luk:'급소 확률, 상자 함정 피하기'};
 const UNKNOWN_BOSS = {id:'boss',n:'이름 없는 자',hp:[460,460],atk:[17,27],def:5,xp:1600,g:[1000,1000],ag:13,boss:1,big:1,ic:'lorc_crowned-skull'};
 const UNK_TEXT = {1:'알 수 없는 미궁 1층. 벽이 숨을 쉬듯 움직인다. 들어올 때마다 길이 바뀐다.', 2:'알 수 없는 미궁 2층. 발소리가 한 박자 늦게 따라온다.', 3:'알 수 없는 미궁 3층. 어둠 너머에서 이름 없는 무언가가 기다린다.'};
 const DX=[0,1,0,-1], DY=[-1,0,1,0], DIRS=['북','동','남','서'], TAGS=['갑','을','병','정','무'];
@@ -476,12 +560,12 @@ const need = lv => 15*lv*lv + 5*lv;
 const living = () => S.party.filter(m => !m.dead);
 const liveEnemies = () => S.combat.enemies.filter(e => e.hp > 0);
 const mod = v => Math.floor((v-10)/3);
-const spw = m => m.lv + m.magB + (m.cls==='마법사' ? mod(m.st.iq) : m.cls==='승려' ? mod(m.st.pie) : 0);
+const spw = m => m.lv + m.magB + skB(m,'mag') + (m.cls==='마법사' ? mod(m.st.iq) : m.cls==='승려' ? mod(m.st.pie) : 0);
 const bsum = (x,k) => (x.bf||[]).reduce((s,b)=>s+(BUFF[b.k][k]||0),0);
 const hasBf = (x,k) => (x.bf||[]).some(b=>b.k===k);
 function addBf(x,k,t){ x.bf=x.bf||[]; const b=x.bf.find(b=>b.k===k); if(b) b.t=Math.max(b.t,t); else x.bf.push({k,t}); }
 function delBf(x,k){ x.bf=(x.bf||[]).filter(b=>b.k!==k); }
-const pDef = m => CLS[m.cls].def + m.defB + bsum(m,'def');
+const pDef = m => CLS[m.cls].def + m.defB + bsum(m,'def') + skB(m,'def');
 
 let S, busy = false;
 // 화면 전용 상태 (저장하지 않음)
@@ -507,7 +591,7 @@ function normalize(){
   S.cycle ||= 1; S.rebirths ||= 0; S.realm ||= 'normal'; S.unkMax ||= 0; S.loot ||= [];
   if(S.realm==='unknown' && !S.unk) S.realm='normal';
   if(S.mode==='won') S.mode='town';
-  S.party.forEach(m=>{ m.bf ||= []; });
+  S.party.forEach(m=>{ m.bf ||= []; m.skills ||= {}; m.skTaken ||= 0; if(!caster(m) && m.msp==null){ m.msp=3+m.lv; m.sp=m.msp; } });
   if(S.combat && S.combat.enemies.some(e=>!e.id)){ S.combat=null; if(S.mode==='combat') S.mode='dungeon'; }
 }
 function log(t,k=''){ S.log.push({t,k}); if(S.log.length>80) S.log.shift(); }
@@ -529,12 +613,20 @@ const Store = {
     if(this.kind==='cloud'){ try{ const s=await this.ref(n).get(); return s.exists ? s.data() : null; }catch(e){ return null; } }
     try{ return JSON.parse(localStorage.getItem('lirgard-slot'+n)); }catch(e){ return null; }
   },
+  async del(n){
+    if(this.kind==='cloud'){ await this.ref(n).delete(); return; }
+    localStorage.removeItem('lirgard-slot'+n);
+  },
   async put(n,rec){
     if(this.kind==='cloud'){ await this.ref(n).set(rec); return; }
     localStorage.setItem('lirgard-slot'+n, JSON.stringify(rec));
   },
   label(){ return this.kind==='cloud' ? '계정에 저장 · 웹과 모바일 어디서나 이어할 수 있다' : '이 브라우저에만 저장된다'; },
 };
+async function deleteSlot(n){
+  try{ await Store.del(n); log(`모험 기록부 ${n}번을 지웠다.`,'sys'); }catch(e){ log('기록을 지우지 못했다. 잠시 후 다시 시도하자.','bad'); }
+  UI.delConfirm=null; UI.slots=null; render(); refreshSlots();
+}
 async function refreshSlots(){
   const out=[]; for(let n=1;n<=SLOTS;n++) out.push(await Store.get(n));
   UI.slots=out; render();
@@ -560,14 +652,18 @@ async function loadFrom(n){
   try{ S=JSON.parse(rec.state); }catch(e){ return; }
   normalize();
   S.mode='town'; S.townView='main'; S.combat=null; busy=false; UI.confirm=null; UI.scene='square'; UI.fadeIn=now();
-  log(`모험 기록부 ${n}번을 펼쳤다. 파티가 여관에서 눈을 뜬다.`,'gold'); render();
+  log(`모험 기록부 ${n}번을 펼쳤다. 파티가 여관에서 눈을 뜬다.`,'gold');
+  if(S.party.some(m=>skPend(m)>0)) log('✦ 새 기술을 고를 수 있는 동료가 있다.','gold');
+  openPicks(); render();
 }
 
 // ───────── 캐릭터 ─────────
 function mk(name, cls, race, st){
   const c=CLS[cls], m={name,cls,race,st:{...st},lv:1,xp:0,
     mhp:Math.max(4,c.hp0+rnd(0,3)+mod(st.vit)*2), mmp:c.mp0 ? c.mp0+Math.max(0,mod(cls==='마법사'?st.iq:st.pie)) : 0,
-    atkB:0,defB:0,magB:0,ag:st.agi+rnd(0,4),dead:false,gear:[],guard:false,bf:[]};
+    atkB:0,defB:0,magB:0,ag:st.agi+rnd(0,4),dead:false,gear:[],guard:false,bf:[],skills:{},skTaken:0};
+  // MP가 없는 직업은 기술에 정신력을 쓴다
+  if(!c.mp0){ m.msp=4+Math.max(0,mod(st.vit)); m.sp=m.msp; }
   m.hp=m.mhp; m.mp=m.mmp; return m;
 }
 function meetsReq(cls, st){ return Object.entries(CLS[cls].req).every(([k,v])=>st[k]>=v); }
@@ -627,7 +723,7 @@ function createAct(a,v){
     log(`${m.name} — ${m.race} ${m.cls}. 등록부에 이름이 올랐다. (HP ${m.mhp})`,'good');
     newDraft();
   }
-  if(a==='kick'){ const m=S.party.splice(+v,1)[0]; log(`${J(m.name,'이','가')} 등록부에서 지워졌다.`,'sys'); }
+  if(a==='kick'){ const m=S.party.splice(+v,1)[0]; log(`${J(m.name,'이','가')} 등록부에서 지워졌다.`,'sys'); if(!S.draft) newDraft(); }
   if(a==='up' && +v>0){ const i=+v; [S.party[i-1],S.party[i]]=[S.party[i],S.party[i-1]]; }
   if(a==='begin' && S.party.length) return beginAdventure();
   if(a==='quick') return quickParty();
@@ -766,7 +862,7 @@ function stairs(){
 }
 function openChest(){
   S.opened.push(`${S.floor}:${S.x},${S.y}`); S.chests++;
-  const thief=S.party.find(m=>m.cls==='도적'&&!m.dead);
+  const thief=S.party.find(m=>(m.cls==='도적'||skB(m,'trap')>0)&&!m.dead);
   if(thief) log(`${J(thief.name,'이','가')} 상자의 독침 함정을 해제했다.`,'good');
   else if(Math.random()<0.5 - Math.max(...living().map(m=>m.st.luk))*0.015){
     log('찰칵! 독침 함정이 튀어나왔다!','bad'); shake(5,300);
@@ -785,7 +881,7 @@ function pray(){
   S.unk.prayed[f]=true;
   const dead=S.party.filter(m=>m.dead), back=dead.slice(0,cap);
   back.forEach(m=>{ m.dead=false; m.hp=Math.ceil(m.mhp/2); m.mp=0; m.bf=[]; pfx(m,'heal','부활'); });
-  living().filter(m=>!back.includes(m)).forEach(m=>{ m.hp=m.mhp; m.mp=m.mmp; m.bf=[]; pfx(m,'heal','회복'); });
+  living().filter(m=>!back.includes(m)).forEach(m=>{ m.hp=m.mhp; m.mp=m.mmp; if(m.msp) m.sp=m.msp; m.bf=[]; pfx(m,'heal','회복'); });
   fx('spirit',W/2,H/2,{dur:1200});
   log('✧ 제단에 기도했다. 푸른 불꽃이 파티를 감싼다.','mag');
   if(back.length) log(`  되살아났다: ${back.map(m=>m.name).join(', ')} (HP 절반)`,'good');
@@ -836,10 +932,40 @@ function giveRare(){
   }
   log('고블린의 자루에는 쓸 만한 장비가 남아 있지 않았다.','sys');
 }
+function openPicks(){ const i=S.party.findIndex(m=>skPend(m)>0); if(i>=0){ UI.pick=i; } }
+function genOffer(m){
+  const ok=id=>skR(m,id)<SKMAX, shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+  const cls=shuf(Object.keys(SKILLS).filter(id=>SKILLS[id].who===m.cls&&ok(id))), race=shuf(Object.keys(SKILLS).filter(id=>SKILLS[id].who===m.race&&ok(id)));
+  const out=[...race.slice(0,1), ...cls.slice(0,2)];
+  for(const id of [...cls.slice(2),...race.slice(1)]) if(out.length<3) out.push(id);
+  return shuf(out);
+}
+function learn(id){
+  const m=S.party[UI.pick], k=SKILLS[id]; if(!m||!k||!m.offer?.includes(id)) return render();
+  const r=skR(m,id)+1; m.skills[id]=r; m.skTaken=(m.skTaken||0)+1; m.offer=null;
+  const g=k.grow||{};
+  if(g.hp){ m.mhp+=g.hp; m.hp+=g.hp; }
+  if(g.mp){ m.mmp+=g.mp; m.mp+=g.mp; }
+  if(g.res){ if(caster(m)){ m.mmp+=g.res; m.mp+=g.res; } else { m.msp+=g.res; m.sp+=g.res; } }
+  log(r>1?`✦ ${m.name}의 「${k.n}」이 ${r}단계로 강화되었다. (${k.d(r)})`:`✦ ${J(m.name,'이','가')} 「${k.n}」을 익혔다. (${k.d(r)})`,'gold');
+  if(skPend(m)<=0){ UI.pick=null; openPicks(); }
+  render();
+}
+function pickHTML(){
+  const m=S.party[UI.pick];
+  if(!m.offer || !m.offer.length) m.offer=genOffer(m);
+  if(!m.offer.length){ m.skTaken=skillSlots(m.lv); UI.pick=null; return ''; }
+  const cards=m.offer.map(id=>{ const k=SKILLS[id], r=skR(m,id), nr=r+1;
+    return `<button class="skc" data-a="learn" data-v="${id}"><span class="sk-who">${k.who===m.race?'종족':'직업'} · ${k.who}</span>
+      <b>${k.n}${r?`<em>강화 ${r}→${nr}</em>`:''}</b><span class="sk-type">${k.use?`기술 · ${k.use==='sp'?'정신력':'MP'} ${k.cost}`:'상시 효과'}</span><p>${k.d(nr)}</p></button>`; }).join('');
+  const known=Object.entries(m.skills||{}).map(([id,r])=>`<span>${SKILLS[id].n} ${r}단계</span>`).join('');
+  return mHead(CLS[m.cls].ic,`${m.name}의 기술`,`Lv${m.lv} ${m.race} ${m.cls} · 고를 수 있는 기술 ${skPend(m)}개 · 이미 가진 기술을 고르면 강화된다`)+
+    `<div class="mbody"><div class="skcards">${cards}</div>${known?`<div class="known">${known}</div>`:''}<div class="btns" style="margin-top:14px">${B('나중에 고른다','close')}</div></div>`;
+}
 function shrineLevel(){
   let any=false; living().forEach(m=>{ if(levelUp(m)) any=true; });
   if(any) log('정령이 쌓인 경험을 힘으로 바꾸었다.','mag'); else log('아직 레벨이 오를 동료가 없다.','sys');
-  render();
+  openPicks(); render();
 }
 function useSpirit(){
   if(!S.spirit || S.spiritUsed || S.mode!=='dungeon') return;
@@ -866,20 +992,22 @@ function inn(kind){
   if(kind==='room'){
     const cost=al.length*10;
     if(S.gold<cost){ log('금화가 부족하다.','bad'); return render(); }
-    S.gold-=cost; al.forEach(m=>{m.hp=m.mhp;m.mp=m.mmp;m.bf=[];});
+    S.gold-=cost; al.forEach(m=>{m.hp=m.mhp;m.mp=m.mmp;if(m.msp)m.sp=m.msp;m.bf=[];});
     log(`객실에서 푹 쉬었다. (−${cost}G) HP와 MP가 모두 회복되고 독과 저주가 풀렸다.`,'good');
   } else return;
   let any=false; al.forEach(m=>{ if(levelUp(m)) any=true; });
   if(!any) log('레벨이 오른 동료는 없다.','sys');
-  render();
+  openPicks(); render();
 }
 function levelUp(m){
   const c=CLS[m.cls]; let up=false;
   while(m.xp>=need(m.lv)){
     m.lv++; up=true; const h=Math.max(1,rnd(...c.hpL)+mod(m.st.vit)); m.mhp+=h; m.hp+=h; m.mmp+=c.mpL; m.mp+=c.mpL;
-    log(`★ ${m.name} 레벨 ${m.lv}! 최대 HP +${h}${c.mpL?`, 최대 MP +${c.mpL}`:''}`,'gold');
+    if(!caster(m)){ m.msp+=1; m.sp+=1; }
+    log(`★ ${m.name} 레벨 ${m.lv}! 최대 HP +${h}${c.mpL?`, 최대 MP +${c.mpL}`:', 최대 정신력 +1'}`,'gold');
     c.spells.filter(k=>SPELLS[k].lv===m.lv).forEach(k=>log(`  ${J(m.name,'은','는')} 새 주문 「${k}(${SPELLS[k].ko})」를 깨우쳤다.`,'mag'));
   }
+  if(up && skPend(m)>0) log(`  ✦ ${m.name}: 새 기술을 고를 수 있다.`,'gold');
   return up;
 }
 function buy(v){
@@ -954,6 +1082,14 @@ function combatCmd(a,v){
   const c=S.combat;
   if(a==='atk'){ if(liveEnemies().length>1){ c.pend={act:'atk'}; c.sub='enemy'; render(); } else pushCmd({act:'atk',target:c.enemies.indexOf(liveEnemies()[0])}); }
   else if(a==='magic'){ c.sub='spell'; render(); }
+  else if(a==='skill'){ c.sub='skill'; render(); }
+  else if(a==='sk'){
+    const k=SKILLS[v]; c.pend={act:'skill',skill:v};
+    if(k.tgt==='enemy'){ if(liveEnemies().length>1){ c.sub='enemy'; render(); } else pushCmd({...c.pend,target:c.enemies.indexOf(liveEnemies()[0])}); }
+    else if(k.tgt==='ally'){ c.sub='ally'; render(); }
+    else if(k.tgt==='dead'){ c.sub='dead'; render(); }
+    else pushCmd(c.pend);
+  }
   else if(a==='sp'){
     const sp=SPELLS[v]; c.pend={act:'spell',spell:v};
     if(sp.tgt==='enemy'){ if(liveEnemies().length>1){ c.sub='enemy'; render(); } else pushCmd({...c.pend,target:c.enemies.indexOf(liveEnemies()[0])}); }
@@ -980,7 +1116,7 @@ async function resolveRound(){
   S.party.forEach(m=>m.guard=false);
   c.cmds.forEach(cm=>{ if(cm.act==='guard') S.party[cm.who].guard=true; });
   const order=[];
-  c.cmds.forEach(cm=>order.push({p:1,cm,init:S.party[cm.who].ag+bsum(S.party[cm.who],'ag')+rnd(0,8)}));
+  c.cmds.forEach(cm=>order.push({p:1,cm,init:S.party[cm.who].ag+bsum(S.party[cm.who],'ag')+skB(S.party[cm.who],'ag')+rnd(0,8)}));
   c.enemies.forEach(e=>{ if(e.hp>0) order.push({p:0,e,init:e.ag+rnd(0,8)}); });
   order.sort((a,b)=>b.init-a.init);
   for(const o of order){
@@ -1001,8 +1137,9 @@ async function resolveRound(){
 }
 function tick(x){
   let any=false; const isP=S.party.includes(x);
+  if(isP && skB(x,'regen')){ const g=skB(x,'regen'); if(caster(x)) x.mp=Math.min(x.mmp,x.mp+g); else x.sp=Math.min(x.msp,x.sp+g); }
   for(const b of [...(x.bf||[])]){
-    if(b.k==='poison'){ const d=rnd(...BUFF.poison.dot), before=x.hp; x.hp=Math.max(1,x.hp-d);
+    if(b.k==='poison'){ const d=!isP&&x.venom?rnd(2*x.venom+1,3*x.venom+2):rnd(...BUFF.poison.dot), before=x.hp; x.hp=Math.max(1,x.hp-d);
       if(x.hp<before){ any=true; log(`${J(x.name,'은','는')} 독으로 ${before-x.hp}의 피해를 입었다.`,'bad'); isP?pfx(x,'hit',`-${before-x.hp}`):efx(x,'num',{text:`-${before-x.hp}`,color:'#9cc25a'}); } }
     if(b.t<90 && --b.t<=0){ delBf(x,b.k); any=true; log(`${x.name}의 ${BUFF[b.k].n} 효과가 사라졌다.`,'sys'); }
   }
@@ -1015,16 +1152,48 @@ function hurt(e,d,color='#f3e7cf'){
   if(e.sleep && Math.random()<0.5) e.sleep=0;
   if(e.hp<=0){ e.hp=0; e.diedAt=now(); efx(e,'burst',{dur:800}); log(`${J(e.name,'을','를')} 쓰러뜨렸다!`,'good'); }
 }
+const activeSkills = m => Object.keys(m.skills||{}).filter(id=>SKILLS[id]?.use);
+function physDmg(m,e,mult=1){
+  const c=CLS[m.cls];
+  let d=rnd(1,c.die)+m.atkB+mod(m.st.str)+bsum(m,'atk')+Math.floor(m.lv/2)+(m.cls==='전사'?2:0)-Math.floor((e.def+bsum(e,'def'))/2);
+  if(e.undead) d*=1+skB(m,'undead');
+  return Math.max(1,Math.round(d*mult));
+}
+function skillAct(m,cm){
+  const id=cm.skill, k=SKILLS[id], r=skR(m,id), pool=k.use;
+  if((m[pool]||0)<k.cost){ log(`${m.name}의 ${pool==='sp'?'정신력':'MP'}이 부족하다.`,'bad'); return true; }
+  m[pool]-=k.cost; log(`${J(m.name,'이','가')} 「${k.n}」!`,'gold');
+  const pw=spw(m);
+  if(id==='smash'){ const e=retarget(cm.target); efx(e,'slash',{dur:450,big:1}); shake(4,200);
+    if(rnd(1,100)>CLS[m.cls].hit+20+m.lv*3+skB(m,'hit')-(e.def+bsum(e,'def'))*4){ log(`하지만 ${J(e.name,'은','는')} 피했다.`); return true; }
+    const d=physDmg(m,e,1.5+0.25*(r-1)); log(`${J(e.name,'이','가')} ${d}의 피해를 입었다.`); hurt(e,d); }
+  if(id==='sweep') liveEnemies().forEach(e=>{ efx(e,'slash',{dur:350}); const d=physDmg(m,e,0.6+0.15*(r-1)); log(`  ${J(e.name,'이','가')} ${d}의 피해.`); hurt(e,d); });
+  if(id==='taunt'){ addBf(m,'taunt',1+r); pfx(m,'buff','도발'); log(`  ${J(m.name,'이','가')} 적의 시선을 끌어모은다.`,'sys'); }
+  if(id==='vital'){ const e=retarget(cm.target); efx(e,'slash',{dur:400}); let d=physDmg(m,e);
+    if(Math.random()<0.5+0.15*(r-1)){ d*=2; log('  급소를 꿰뚫었다!','gold'); fx('flash',0,0,{color:'255,240,210',dur:200}); }
+    log(`  ${J(e.name,'이','가')} ${d}의 피해를 입었다.`); hurt(e,d); }
+  if(id==='venom'){ const e=retarget(cm.target); efx(e,'slash',{dur:350}); const d=physDmg(m,e); log(`  ${J(e.name,'이','가')} ${d}의 피해를 입었다.`); hurt(e,d);
+    if(e.hp>0){ addBf(e,'poison',99); e.venom=Math.max(e.venom||0,r); log(`  ${J(e.name,'이','가')} 중독되었다.`,'good'); } }
+  if(id==='purify'){ const t=S.party[cm.target]; if(t.dead){ log(`${J(t.name,'은','는')} 이미 숨이 끊어졌다.`,'bad'); return true; }
+    ['poison','curse','weak'].forEach(x=>delBf(t,x)); const h=Math.min(8*r+rnd(0,4)+pw+skB(m,'heal'),t.mhp-t.hp); t.hp+=h; pfx(t,'heal',`+${h}`); fx('heal',W/2,H); log(`  ${t.name}의 몸이 정화되었다. HP +${h}`,'good'); }
+  if(id==='miracle'){ const t=S.party[cm.target]; if(!t||!t.dead){ log('  되살릴 동료가 없다.','sys'); return true; }
+    t.dead=false; t.hp=Math.max(1,Math.round(t.mhp*0.25*r)); pfx(t,'heal','부활'); fx('heal',W/2,H,{dur:1000}); fx('flash',0,0,{color:'255,240,200',dur:300}); log(`  기적이 일어났다! ${J(t.name,'이','가')} 다시 일어선다. (HP ${t.hp})`,'gold'); }
+  if(id==='bolt'){ const e=retarget(cm.target), d=rnd(8,16)+pw+5*(r-1); efx(e,'holy'); fx('flash',0,0,{color:'200,230,255',dur:220}); log(`  번개가 ${J(e.name,'을','를')} 내리쳤다. ${d}의 피해.`,'mag'); hurt(e,d,'#cfe9ff'); }
+  if(id==='freeze'){ const e=retarget(cm.target); efx(e,'sleep'); if(e.boss&&Math.random()<0.5){ log(`  ${J(e.name,'은','는')} 얼음을 깨뜨렸다.`); return true; }
+    e.frozen=1+r; log(`  ${J(e.name,'이','가')} 얼음 속에 갇혔다. (${1+r}라운드)`,'mag'); }
+  return true;
+}
 function partyAct(cm){
   const m=S.party[cm.who]; if(m.dead) return false; const c=CLS[m.cls];
   if(cm.act==='guard'){ log(`${J(m.name,'은','는')} 방패를 들고 몸을 낮췄다.`,'sys'); pfx(m,'buff','방어'); return true; }
+  if(cm.act==='skill') return skillAct(m,cm);
   if(cm.act==='atk'){
     const e=retarget(cm.target);
-    const hit=c.hit+m.lv*3+mod(m.st.agi)*3+bsum(m,'hit')-(e.def+bsum(e,'def'))*4+(e.sleep?30:0);
+    const hit=c.hit+m.lv*3+mod(m.st.agi)*3+bsum(m,'hit')+skB(m,'hit')-(e.def+bsum(e,'def'))*4+(e.sleep||e.frozen?30:0);
     efx(e,'slash',{dur:350});
     if(rnd(1,100)>hit){ log(`${m.name}의 공격! 하지만 ${J(e.name,'은','는')} 피했다.`); efx(e,'num',{text:'빗나감',color:'#8f7f6c'}); return true; }
-    let d=Math.max(1,rnd(1,c.die)+m.atkB+mod(m.st.str)+bsum(m,'atk')+Math.floor(m.lv/2)+(m.cls==='전사'?2:0)-Math.floor((e.def+bsum(e,'def'))/2));
-    if(Math.random()<(m.cls==='도적'?0.12:0)+(m.crit||0)+Math.max(0,m.st.luk-8)*0.01){ d*=2; log(`${J(m.name,'이','가')} 급소를 찔렀다!`,'gold'); efx(e,'slash',{dur:450,big:1}); fx('flash',0,0,{color:'255,240,210',dur:220}); shake(5,220); }
+    let d=physDmg(m,e);
+    if(Math.random()<(m.cls==='도적'?0.12:0)+(m.crit||0)+skB(m,'crit')+Math.max(0,m.st.luk-8)*0.01){ d*=2; log(`${J(m.name,'이','가')} 급소를 찔렀다!`,'gold'); efx(e,'slash',{dur:450,big:1}); fx('flash',0,0,{color:'255,240,210',dur:220}); shake(5,220); }
     log(`${J(m.name,'이','가')} ${J(e.name,'을','를')} 베었다. ${d}의 피해.`); hurt(e,d); return true;
   }
   if(cm.act==='potion'){
@@ -1038,11 +1207,11 @@ function partyAct(cm){
   log(`${J(m.name,'이','가')} 「${k}」를 외웠다! (${sp.ko})`,'mag');
   if(k==='이그나'){ const e=retarget(cm.target), d=rnd(2,8)+pw; efx(e,'fire'); log(`불꽃이 ${J(e.name,'을','를')} 감쌌다. ${d}의 피해.`,'mag'); hurt(e,d,'#ffb35c'); }
   if(k==='이그나라'){ fx('flash',0,0,{color:'255,140,40',dur:300}); shake(4,300); liveEnemies().forEach(e=>{ const d=rnd(3,10)+pw; efx(e,'fire',{dur:900}); log(`  화염이 ${J(e.name,'을','를')} 휩쓸었다. ${d}의 피해.`,'mag'); hurt(e,d,'#ffb35c'); }); }
-  if(k==='루크스'){ const e=retarget(cm.target); let d=rnd(4,12)+pw; efx(e,'holy'); if(e.undead){ d*=2; log('성스러운 빛이 언데드를 태운다!','gold'); } log(`${J(e.name,'이','가')} ${d}의 피해를 입었다.`,'mag'); hurt(e,d,'#ffe28a'); }
+  if(k==='루크스'){ const e=retarget(cm.target); let d=rnd(4,12)+pw; efx(e,'holy'); if(e.undead){ d=Math.round(d*(2+skB(m,'undead'))); log('성스러운 빛이 언데드를 태운다!','gold'); } log(`${J(e.name,'이','가')} ${d}의 피해를 입었다.`,'mag'); hurt(e,d,'#ffe28a'); }
   if(k==='솜나') liveEnemies().forEach(e=>{ efx(e,'sleep'); if(Math.random()<(e.boss?0.12:0.6)){ e.sleep=rnd(1,3); log(`  ${J(e.name,'이','가')} 잠들었다.`,'mag'); } else log(`  ${J(e.name,'은','는')} 버텨냈다.`); });
   if(k==='모르타') liveEnemies().forEach(e=>{ efx(e,'weak'); if(Math.random()<(e.boss?0.4:0.75)){ addBf(e,'weak',3); log(`  ${J(e.name,'이','가')} 약화되었다. (공격·방어 −2, 3라운드)`,'mag'); } else log(`  ${J(e.name,'은','는')} 저주를 떨쳐냈다.`); });
-  if(k==='사나'){ const t=S.party[cm.target]; if(t.dead){ log(`${J(t.name,'은','는')} 이미 숨이 끊어졌다.`,'bad'); return true; } const h=Math.min(rnd(4,10)+pw,t.mhp-t.hp); t.hp+=h; pfx(t,'heal',`+${h}`); fx('heal',W/2,H); log(`${t.name} HP +${h}`,'good'); }
-  if(k==='사나라'){ fx('heal',W/2,H,{dur:1000}); living().forEach(t=>{ const h=Math.min(rnd(3,8)+pw,t.mhp-t.hp); t.hp+=h; delBf(t,'poison'); delBf(t,'curse'); pfx(t,'heal',`+${h}`); log(`  ${t.name} HP +${h}`,'good'); }); log('  독과 저주가 씻겨 나갔다.','good'); }
+  if(k==='사나'){ const t=S.party[cm.target]; if(t.dead){ log(`${J(t.name,'은','는')} 이미 숨이 끊어졌다.`,'bad'); return true; } const h=Math.min(rnd(4,10)+pw+skB(m,'heal'),t.mhp-t.hp); t.hp+=h; pfx(t,'heal',`+${h}`); fx('heal',W/2,H); log(`${t.name} HP +${h}`,'good'); }
+  if(k==='사나라'){ fx('heal',W/2,H,{dur:1000}); living().forEach(t=>{ const h=Math.min(rnd(3,8)+pw+skB(m,'heal'),t.mhp-t.hp); t.hp+=h; delBf(t,'poison'); delBf(t,'curse'); pfx(t,'heal',`+${h}`); log(`  ${t.name} HP +${h}`,'good'); }); log('  독과 저주가 씻겨 나갔다.','good'); }
   if(k==='벤딕'){ fx('buff',W/2,H); living().forEach(t=>{ addBf(t,'bless',3); pfx(t,'buff','축복'); }); log('  파티에 축복이 내렸다. (공격 +2, 명중 +10, 3라운드)','gold'); }
   if(k==='프로테'){ fx('buff',W/2,H); living().forEach(t=>{ addBf(t,'protect',3); pfx(t,'buff','보호'); }); log('  빛의 장막이 파티를 감쌌다. (방어 +3, 3라운드)','gold'); }
   return true;
@@ -1055,6 +1224,7 @@ function damage(t,d){
 }
 function enemyAct(e){
   if(e.hp<=0) return false;
+  if(e.frozen>0){ e.frozen--; log(`${J(e.name,'은','는')} 얼어붙어 움직이지 못한다.`,'sys'); return true; }
   if(e.sleep>0){ e.sleep--; log(`${J(e.name,'은','는')} 잠들어 있다.`,'sys'); return true; }
   if(e.treasure && Math.random()<0.28){ e.fled=true; e.hp=0; log('보물 고블린이 금화 자루를 끌어안고 벽 틈으로 달아났다!','bad'); fx('flash',0,0,{color:'240,190,60',dur:300}); return true; }
   e.atkAt=now();
@@ -1072,11 +1242,13 @@ function enemyAct(e){
     if(kind==='curse'){ addBf(t,'curse',3); pfx(t,'debuff','저주'); efx(e,'bolt'); log(`${J(e.name,'이','가')} ${t.name}에게 저주를 걸었다! (공격 −3, 명중 −15)`,'bad'); return true; }
     if(kind==='weak'){ living().forEach(m=>{ addBf(m,'weak',2); pfx(m,'debuff','약화'); }); fx('flash',0,0,{color:'90,40,140',dur:400}); log(`${J(e.name,'이','가')} 쇠약의 주문을 퍼뜨렸다! (파티 공격·방어 −2)`,'bad'); return true; }
   }
-  const front=S.party.filter((m,i)=>i<2&&!m.dead), t=pick(front.length?front:living());
+  const front=S.party.filter((m,i)=>i<2&&!m.dead), taunt=living().filter(m=>hasBf(m,'taunt'));
+  const t=taunt.length?taunt[0]:pick(front.length?front:living());
   if(Math.random()<0.12){ log(`${e.name}의 공격이 빗나갔다.`); return true; }
+  if(Math.random()<skB(t,'evade')){ log(`${J(e.name,'이','가')} 덤볐지만 ${J(t.name,'이','가')} 몸을 비틀어 피했다!`,'good'); pfx(t,'buff','회피'); return true; }
   const d=Math.max(1,rnd(...e.atk)+bsum(e,'atk')-Math.floor(pDef(t)*ARMOR));
   log(`${J(e.name,'이','가')} ${t.name}에게 덤벼들었다!`); fx('flash',0,0,{color:'200,30,20',dur:220}); shake(e.big?7:4,250); damage(t,d);
-  if(!t.dead && e.on?.poison && Math.random()<e.on.poison && !hasBf(t,'poison')){ addBf(t,'poison',99); pfx(t,'debuff','독'); log(`${J(t.name,'이','가')} 중독되었다!`,'bad'); }
+  if(!t.dead && e.on?.poison && Math.random()<e.on.poison && !hasBf(t,'poison') && Math.random()>=skB(t,'pres')){ addBf(t,'poison',99); pfx(t,'debuff','독'); log(`${J(t.name,'이','가')} 중독되었다!`,'bad'); }
   return true;
 }
 function victory(){
@@ -1085,7 +1257,7 @@ function victory(){
   // 보물 고블린이 도망쳤다
   if(!beaten.length){ endCombat(); if(gob) relocateGob(gob); log('자루 소리가 멀어진다. 아직 이 층 어딘가에 있다.','sys'); S.mode='dungeon'; return render(); }
   const xp=beaten.reduce((s,e)=>s+e.xp,0), g=unk?0:beaten.reduce((s,e)=>s+e.g,0), each=Math.floor(xp/al.length);
-  al.forEach(m=>m.xp+=each); S.gold+=g;
+  al.forEach(m=>{ m.xp+=Math.round(each*(1+skB(m,'xp'))); if(m.msp) m.sp=Math.min(m.msp,m.sp+1); }); S.gold+=g;
   beaten.forEach(e=>S.kills[e.id]=(S.kills[e.id]||0)+1);
   if(unk) S.kills.unknown=(S.kills.unknown||0)+beaten.length;
   log(unk?`승리! 각자 경험치 ${each}을 얻었다.`:`승리! 각자 경험치 ${each}, 금화 ${g}G를 얻었다.`,'gold');
@@ -1137,7 +1309,7 @@ function endingNext(){
 function startCycle2(){
   S.cycle=2; S.spirit=true; S.spiritUsed=false; S.realm='normal'; S.ending=null; S.bottles=0; S.gobKills={1:0,2:0,3:0};
   S.mode='town'; S.townView='main'; UI.scene='square'; UI.fadeIn=now();
-  S.party.forEach(m=>{ m.dead=false; m.hp=m.mhp; m.mp=m.mmp; m.bf=[]; });
+  S.party.forEach(m=>{ m.dead=false; m.hp=m.mhp; m.mp=m.mmp; if(m.msp) m.sp=m.msp; m.bf=[]; });
   delete S.quests.acc.q_boss; if(!S.quests.done.includes('q_boss')) S.quests.done.push('q_boss');
   S.quests.acc.q_unk=0;
   log('── 2회차 ──','round');
@@ -1547,7 +1719,7 @@ function closeModal(){
   if(S.mode!=='town') return;
   S.townView='main'; UI.scene='square'; UI.fac=null; UI.fadeIn=now(); UI.confirm=null; render();
 }
-const modalOpen = () => S && S.mode==='town' && S.townView!=='main' && !UI.anim;
+const modalOpen = () => S && ((UI.pick!=null && ['town','dungeon'].includes(S.mode) && !UI.anim) || (S.mode==='town' && S.townView!=='main' && !UI.anim));
 function toggleMap(){ UI.map=!UI.map; try{ localStorage.setItem('lirgard-map',UI.map?'1':'0'); }catch(e){} render(); }
 function drawWisp(x,y,r,t){
   const b=reduce?0:Math.sin(t/400)*r*0.15;
@@ -1621,7 +1793,7 @@ function portrait(m){
 }
 
 function placeHTML(){
-  if(S.mode==='title') return hero('lorc_candle-skull','리르가드의 미궁',`<p>변경의 마을 아래로 끝없이 이어진 지하묘지. 마도왕 베르가스가 그 가장 깊은 곳에서 죽은 자들을 부리고 있다.</p><p class="muted">새 파티를 꾸리거나, 여관에 남겨 둔 모험 기록부를 펼친다. 마도왕을 쓰러뜨리면 이야기는 2회차로, 그 너머의 미궁을 넘으면 환생으로 이어진다.</p><p class="store">${Store.label()}</p>`);
+  if(S.mode==='title') return hero('lorc_candle-skull','리르가드의 미궁',`<p class="story">변경의 마을 아래로 끝없이 이어진 지하묘지. 마도왕 베르가스가 그 가장 깊은 곳에서 죽은 자들을 부리고 있다.</p><p class="muted">새 파티를 꾸리거나, 남겨 둔 모험 기록부를 펼친다.</p><p class="store">${Store.label()}</p>`);
   if(S.mode==='create') return createHTML();
   if(S.mode==='won') return hero('lorc_gothic-cross','귀환',`<p>마을 사람들이 광장에 모였다. 영주가 직접 서약의 검을 건넨다. 리르가드의 미궁은 이제 조용하다.</p>`);
   if(S.mode==='dead') return hero('lorc_gothic-cross','전멸',`<p>파티의 횃불이 꺼졌다. 마지막으로 기록부에 남긴 순간부터 다시 시작할 수 있다.</p>`);
@@ -1632,7 +1804,12 @@ function slotButtons(act){
   return UI.slots.map((rec,i)=>{
     const n=i+1;
     if(act==='save' && UI.confirm===n) return `<div class="btns">${B(`기록 ${n}번을 덮어쓴다`,'save',n,{primary:1})}${B('취소','cancel')}</div>`;
-    return B(`<span class="slot"><span>기록 ${n}</span>${slotLine(rec)}</span>`,act,n,{wide:1,dis:(act==='load'&&!rec)||UI.saving});
+    const main=B(`<span class="slot"><span>기록 ${n}</span>${slotLine(rec)}</span>`,act,n,{wide:1,dis:(act==='load'&&!rec)||UI.saving});
+    if(act==='load' && S.mode==='title' && rec){
+      if(UI.delConfirm===n) return `<div class="btns">${B(`기록 ${n}번을 지운다`,'delslot2',n,{primary:1})}${B('취소','cancel')}</div>`;
+      return `<div class="slotrow">${main}<button class="rdel" data-a="delslot" data-v="${n}" aria-label="기록 ${n}번 삭제">삭제</button></div>`;
+    }
+    return main;
   }).join('');
 }
 // ── 시설 창 ──
@@ -1640,6 +1817,7 @@ const mHead=(ic,title,sub)=>`<div class="mhead">${svgIcon(ic)}<div><h2 id="mtitl
   <div class="mgold">금화<br><b>${S.gold}G</b><br>물약 ${S.potions}</div><button class="mini" data-a="close" aria-label="닫기">✕</button></div>`;
 const mRow=(name,desc,price,btns)=>`<div class="mrow"><span class="nm">${name}</span><span class="pr">${price}</span>${desc?`<span class="ds">${desc}</span>`:''}${btns?`<div class="btns">${btns}</div>`:''}</div>`;
 function modalHTML(){
+  if(UI.pick!=null && S.party[UI.pick]){ const h=pickHTML(); if(h) return h; }
   const v=S.townView;
   if(v==='inn'){
     const al=living().length, ups=living().filter(m=>m.xp>=need(m.lv)).map(m=>m.name);
@@ -1738,35 +1916,43 @@ function cmdHTML(){
   const m=S.party[c.cur], back=B('← 취소','back','',{dis:!c.sub&&!c.cmds.length});
   if(c.sub==='enemy') return `<p class="prompt">${m.name}: 누구를? <span class="muted" style="font-size:13px">화면의 몬스터를 눌러도 된다</span></p><div class="btns">${c.enemies.map((e,i)=>e.hp>0?B(e.name+(e.sleep?' (잠듦)':''),'tgt',i,{wide:1}):'').join('')}${back}</div>`;
   if(c.sub==='ally') return `<p class="prompt">${m.name}: 누구에게?</p><div class="btns">${S.party.map((t,i)=>t.dead?'':B(t.name,'tgt',i,{sub:`HP ${t.hp}/${t.mhp}`,wide:1})).join('')}${back}</div>`;
+  if(c.sub==='skill'){ const res=v=>v==='sp'?'정신력':'MP';
+    return `<p class="prompt">${m.name}: 어떤 기술을?</p><div class="btns">${activeSkills(m).map(id=>{ const k=SKILLS[id], have=k.use==='sp'?m.sp:m.mp;
+      return B(`${k.n}${skR(m,id)>1?` ${skR(m,id)}단계`:''}`,'sk',id,{dis:(have||0)<k.cost,sub:`${res(k.use)} ${k.cost}`,wide:1}); }).join('')}${back}</div>`; }
+  if(c.sub==='dead') return `<p class="prompt">${m.name}: 누구를 되살릴까?</p><div class="btns">${S.party.map((t,i)=>t.dead?B(t.name,'tgt',i,{wide:1}):'').join('')||'<p class="hint">쓰러진 동료가 없다.</p>'}${back}</div>`;
   if(c.sub==='spell') return `<p class="prompt">${m.name}: 어떤 주문을?</p><div class="btns">${CLS[m.cls].spells.filter(k=>SPELLS[k].lv<=m.lv).map(k=>B(`${k} · ${SPELLS[k].ko}`,'sp',k,{dis:m.mp<SPELLS[k].mp,sub:`MP ${SPELLS[k].mp}`,wide:1})).join('')}${back}</div>`;
-  return `<p class="prompt">▶ ${J(m.name,'은','는')} 무엇을 할까?</p><div class="btns">${B('공격','atk')}${B('주문','magic','',{dis:!CLS[m.cls].spells.length})}${B('방어','guard')}${B('물약','potion','',{dis:!S.potions,sub:S.potions+'개'})}${B('도망','flee')}${back}</div>`;
+  return `<p class="prompt">▶ ${J(m.name,'은','는')} 무엇을 할까?</p><div class="btns">${B('공격','atk')}${B('주문','magic','',{dis:!CLS[m.cls].spells.length})}${activeSkills(m).length?B('기술','skill','',{sub:caster(m)?'':`정신력 ${m.sp}`}):''}${B('방어','guard')}${B('물약','potion','',{dis:!S.potions,sub:S.potions+'개'})}${B('도망','flee')}${back}</div>`;
 }
 function createHTML(){
-  const d=S.draft, st=dStats(), left=dLeft(), prob=draftProblem();
-  const chip=(label,a,v,on,dis,sub='',ic='')=>`<button class="chip" data-a="${a}" data-v="${v}" aria-pressed="${on}"${dis?' disabled':''}>${ic?svgIcon(ic):''}${label}${sub?`<small>${sub}</small>`:''}</button>`;
+  const d=S.draft, st=dStats(), left=dLeft(), prob=draftProblem(), full=S.party.length>=4, X=full?' disabled':'';
+  const chip=(label,a,v,on,dis,sub='',ic='')=>`<button class="chip" data-a="${a}" data-v="${v}" aria-pressed="${on}"${dis||full?' disabled':''}>${ic?svgIcon(ic):''}${label}${sub?`<small>${sub}</small>`:''}</button>`;
+  const roster=S.party.length?`<div class="fld"><span class="lbl">등록된 모험가 ${S.party.length}/4</span><div class="roster">${S.party.map((m,i)=>`<span class="rchip">${m.name} <small>${m.race} ${m.cls}</small><button class="rdel" data-a="kick" data-v="${i}" aria-label="${m.name} 삭제">삭제</button></span>`).join('')}</div></div>`:'';
   return `<h2>모험가 길드 · 등록소</h2>
-  <p class="muted">${S.party.length<4?`${S.party.length+1}번째 모험가를 등록한다.`:'파티가 가득 찼다. 오른쪽에서 출발할 수 있다.'}</p>
-  <div class="cf">
+  <p class="muted">${full?'파티가 가득 찼다.':`${S.party.length+1}번째 모험가를 등록한다.`}</p>
+  ${roster}
+  ${full?'<p class="full-note">네 명이 모두 정해졌다. 바꾸려면 위에서 [삭제]한 뒤 다시 만든다. 준비가 되면 [이 파티로 마을에 나간다].</p>':''}
+  <div class="cf${full?' locked':''}">
     <div class="fld"><label class="lbl" for="cname">이름</label>
-      <div class="nmrow"><input id="cname" maxlength="8" autocomplete="off" value="${d.name.replace(/"/g,'&quot;')}">
-      <button class="chip" data-a="randname" data-v="">무작위</button></div></div>
+      <div class="nmrow"><input id="cname" maxlength="8" autocomplete="off" value="${d.name.replace(/"/g,'&quot;')}"${X}>
+      <button class="chip" data-a="randname" data-v=""${X}>무작위</button></div></div>
     <div class="fld"><span class="lbl">종족</span>
       <div class="chips">${Object.keys(RACES).map(r=>chip(r,'race',r,r===d.race)).join('')}</div>
       <p class="hint">${RACES[d.race].d}</p></div>
     <div class="fld"><div class="lbl sp"><span>능력치</span><span>보너스 <b class="${left?'g':''}">${left}</b> / ${d.bonus}</span>
-      <button class="chip" data-a="reroll" data-v="">다시 굴리기</button></div>
+      <button class="chip" data-a="reroll" data-v=""${X}>다시 굴리기</button></div>
       <div class="stats">${STATS.map(([k,n])=>{ const b=RACES[d.race].st[k], v=st[k], md=mod(v);
         return `<div class="st"><span>${n}</span><b>${v}</b>
-          <span class="adj"><button class="mini" data-a="st-" data-v="${k}" aria-label="${n} 내리기"${d.add[k]?'':' disabled'}>−</button>
-          <button class="mini" data-a="st+" data-v="${k}" aria-label="${n} 올리기"${left&&v<STAT_MAX?'':' disabled'}>+</button></span>
+          <span class="adj"><button class="mini" data-a="st-" data-v="${k}" aria-label="${n} 내리기"${d.add[k]&&!full?'':' disabled'}>−</button>
+          <button class="mini" data-a="st+" data-v="${k}" aria-label="${n} 올리기"${left&&v<STAT_MAX&&!full?'':' disabled'}>+</button></span>
           <span class="sbar"><i style="width:${b/STAT_MAX*100}%"></i><i class="add" style="width:${(v-b)/STAT_MAX*100}%"></i></span>
-          <span class="md">${md>0?'+'+md:md<0?md:''}</span></div>`;}).join('')}</div></div>
+          <span class="md">${md>0?'+'+md:md<0?md:''}</span><span class="sd">${STAT_DESC[k]}</span></div>`;}).join('')}</div>
+      <p class="hint">10~12는 보정 없음, 15 이상 +1, 18은 +2, 9 이하는 −1. 오른쪽 숫자가 보정값이다.</p></div>
     <div class="fld"><span class="lbl">직업</span>
       <div class="chips">${Object.keys(CLS).map(c=>{ const [k,v]=Object.entries(CLS[c].req)[0];
         return chip(c,'cls',c,c===d.cls,!meetsReq(c,st),`${SNAME[k]} ${v}`,CLS[c].ic); }).join('')}</div>
       <p class="hint">${d.cls?CLS[d.cls].d:'요구 능력치를 채우면 직업을 고를 수 있다.'}</p></div>
     ${S.rebirths?`<p class="hint" style="color:var(--gold)">환생 ${S.rebirths}회 · 전생의 기억으로 보너스 포인트 +${rebirthBonus()}</p>`:''}
-    <div class="fld"><button class="btn wide primary" id="regbtn" data-a="register" data-v=""${prob?' disabled':''}>등록부에 올린다</button>
+    <div class="fld"><button class="btn wide primary" id="regbtn" data-a="register" data-v=""${prob||full?' disabled':''}>등록부에 올린다</button>
       <p class="hint" id="regwhy">${prob}</p></div>
   </div>`;
 }
@@ -1779,17 +1965,18 @@ function partyHTML(){
   const row=i=>i===0?'<div class="rowlbl">전열</div>':i===2?'<div class="rowlbl">후열</div>':'';
   if(S.mode==='create') return S.party.map((m,i)=>`${row(i)}
       <div class="pm">${portrait(m)}<span class="nm">${m.name} <span>${m.race} ${m.cls}</span></span>
-        <span class="adj"><button class="mini" data-a="up" data-v="${i}" aria-label="${m.name} 앞으로"${i?'':' disabled'}>▲</button><button class="mini" data-a="kick" data-v="${i}" aria-label="${m.name} 지우기">✕</button></span>
+        <span class="adj"><button class="mini" data-a="up" data-v="${i}" aria-label="${m.name} 앞으로"${i?'':' disabled'}>▲</button><button class="rdel" data-a="kick" data-v="${i}" aria-label="${m.name} 삭제">삭제</button></span>
         <div class="row"><div>HP ${m.mhp}${m.mmp?` · MP ${m.mmp}`:''}</div><div class="stline">${STATS.map(([k,n])=>`${n[0]}${m.st[k]}`).join(' ')}</div></div></div>`).join('');
   const cur=S.mode==='combat'&&!busy&&S.combat?S.combat.cur:-1, t=now();
   return S.party.map((m,i)=>{
-    const hpP=Math.max(0,m.hp/m.mhp*100), mpP=m.mmp?m.mp/m.mmp*100:0, ready=m.xp>=need(m.lv);
+    const hpP=Math.max(0,m.hp/m.mhp*100), mpP=m.mmp?m.mp/m.mmp*100:0, spP=m.msp?m.sp/m.msp*100:0, ready=m.xp>=need(m.lv), pend=skPend(m);
     const p=PFX[i], live=p && t-p.t<900, el=live?Math.round(t-p.t):0;
     return `${row(i)}<div class="pm${i===cur?' cur':''}${m.dead?' dead':''}${live?` fx-${p.k}`:''}"${live?` style="animation-delay:-${el}ms"`:''}>${portrait(m)}
       <span class="nm">${i===cur?'▶ ':''}${m.name} <span>${m.race} ${m.cls} Lv${m.lv}</span></span>
       <span class="tag">${m.dead?'사망':m.guard?'방어':ready?'Lv↑ 가능':`다음 ${need(m.lv)-m.xp}`}</span>
       <div class="row"><div>HP ${m.hp}/${m.mhp}<div class="bar${hpP<30?' low':''}"><i style="width:${hpP}%"></i></div></div>
-      <div>${m.mmp?`MP ${m.mp}/${m.mmp}<div class="bar mp"><i style="width:${mpP}%"></i></div>`:'<span class="muted">—</span>'}</div></div>
+      <div>${m.mmp?`MP ${m.mp}/${m.mmp}<div class="bar mp"><i style="width:${mpP}%"></i></div>`:m.msp?`정신력 ${m.sp}/${m.msp}<div class="bar sp"><i style="width:${spP}%"></i></div>`:'<span class="muted">—</span>'}</div></div>
+      ${pend>0&&S.mode!=='combat'?`<div class="bfs"><button class="bf skp" data-a="pick" data-v="${i}">✦ 기술 ${pend}개 고르기</button></div>`:''}
       ${m.gear.some(id=>/^[ur]_/.test(id))?`<div class="bfs uq">${m.gear.filter(id=>/^[ur]_/.test(id)).map(id=>`<span class="bf good">${id[0]==='u'?'★':'◆'} ${itemById(id).n}</span>`).join('')}</div>`:''}
       ${bfChips(m)}${live?`<span class="ftxt ${p.k}" style="animation-delay:-${el}ms">${p.txt}</span>`:''}
     </div>`;}).join('');
@@ -1828,11 +2015,12 @@ function render(){
   } else { md.hidden=true; md.innerHTML=''; }
   document.documentElement.style.overflow = open ? 'hidden' : '';
   // 숫자키 번호는 화면에 보이는 순서대로 매긴다. 누르는 키와 표시가 항상 같다.
-  [...document.querySelectorAll(open?'#modal .mbody button.btn[data-a]:not(:disabled)':'#cmd button[data-a]:not(:disabled)')].slice(0,9).forEach((b,i)=>b.insertAdjacentHTML('afterbegin',`<kbd>${i+1}</kbd>`));
+  [...document.querySelectorAll(open?'#modal .mbody button.btn[data-a]:not(:disabled), #modal .mbody button.skc':'#cmd button[data-a]:not(:disabled)')].slice(0,9).forEach((b,i)=>b.insertAdjacentHTML('afterbegin',`<kbd>${i+1}</kbd>`));
   const lines=S.log.map(l=>`<div class="l ${l.k}">${l.t}</div>`);
   const lg=$('#log'); lg.innerHTML=lines.join(''); lg.scrollTop=lg.scrollHeight;
   $('#recent').innerHTML=lines.slice(-3).join('');
   document.documentElement.classList.toggle('play', animated());
+  document.documentElement.classList.toggle('title', S.mode==='title');
   if(!animated()) setLog(false);
 }
 
@@ -1844,11 +2032,15 @@ function dispatch(a,v){
   if(a==='next') return endingNext();
   if(a==='load') return loadFrom(+v);
   if(a==='save') return saveTo(+v);
-  if(a==='cancel'){ UI.confirm=null; return render(); }
+  if(a==='cancel'){ UI.confirm=null; UI.delConfirm=null; return render(); }
+  if(a==='learn') return learn(v);
+  if(a==='pick'){ UI.pick=+v; return render(); }
+  if(a==='delslot'){ UI.delConfirm=+v; return render(); }
+  if(a==='delslot2') return deleteSlot(+v);
   if(S.mode==='create') return createAct(a,v);
   if(a==='mv') return move(v);
   if(a==='go') return goTo(v);
-  if(a==='close') return closeModal();
+  if(a==='close'){ if(UI.pick!=null){ UI.pick=null; return render(); } return closeModal(); }
   if(a==='quit'){ S.townView='quit'; UI.confirm=null; return render(); }
   if(a==='tab'){ UI.shopTab=v; return render(); }
   if(a==='sell') return sell(v);
@@ -1895,7 +2087,7 @@ document.addEventListener('keydown',e=>{
   const mv={w:'F',arrowup:'F',s:'B',arrowdown:'B',x:'B',a:'L',arrowleft:'L',d:'R',arrowright:'R',q:'U'}[k];
   if(mv && S.mode==='dungeon'){ e.preventDefault(); return dispatch('mv',mv); }
   if(k==='m' && S.mode==='dungeon'){ e.preventDefault(); return dispatch('map',''); }
-  if(/^[1-9]$/.test(k)){ const b=[...document.querySelectorAll(modalOpen()?'#modal .mbody button.btn[data-a]:not(:disabled)':'#cmd button[data-a]:not(:disabled)')][+k-1]; if(b){ e.preventDefault(); b.click(); } }
+  if(/^[1-9]$/.test(k)){ const b=[...document.querySelectorAll(modalOpen()?'#modal .mbody button.btn[data-a]:not(:disabled), #modal .mbody button.skc':'#cmd button[data-a]:not(:disabled)')][+k-1]; if(b){ e.preventDefault(); b.click(); } }
   if(k==='escape' && modalOpen()) return dispatch('close','');
   if(k==='escape' && S.mode==='combat') dispatch('back','');
 });
